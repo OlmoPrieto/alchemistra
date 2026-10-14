@@ -65,7 +65,7 @@ void CGame::Init()
   m_spCircle   = std::make_shared<Texture2D>(LoadTexture("assets/circle.png"));
 
   m_oPendingElements.first  = 1;
-  m_oPendingElements.second = 2;
+  m_oPendingElements.second = 1;
 }
 
 // ------------------------
@@ -115,6 +115,11 @@ void CGame::Update(float _fDt)
           break;
         }
       }
+    }
+
+    while (CheckAndMerge())
+    {
+      printf("Merged!\n");
     }
   }
 }
@@ -181,6 +186,89 @@ void CGame::Draw()
 
   // --------------
   EndDrawing();
+}
+
+// ------------------------
+
+bool CGame::CheckAndMerge()
+{
+  bool bMerged = false;
+
+  // Horizontal
+  for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
+  {
+    for (uint32 j = 0; j < sm_uMaxHorizontalElements; ++j)
+    {
+      uint8 uOccurrence = 1u;
+      const uint8 uCurrentType = m_auPlacedElements[i][j];
+      if (uCurrentType != 0u)
+      {
+        uint32 k = j + 1;
+        for (; k < sm_uMaxHorizontalElements; ++k)
+        {
+          if (m_auPlacedElements[i][k] != uCurrentType)
+          {
+            break;
+          }
+          else
+          {
+            ++uOccurrence;
+          }
+        }
+
+        if (uOccurrence >= 3u)
+        {
+          // Merge
+          m_auPlacedElements[i][j] += 1u;
+          for (uint32 l = j + 1; l < k; ++l)
+          {
+            m_auPlacedElements[i][l] = 0u;
+          }
+
+          bMerged = true;
+        }
+      }
+    }
+  }
+
+  // Vertical
+  for (uint32 i = 0; i < sm_uMaxHorizontalElements; ++i)
+  {
+    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+    {
+      uint8 uOccurrence = 1u;
+      const uint8 uCurrentType = m_auPlacedElements[j][i];
+      if (uCurrentType != 0u)
+      {
+        uint32 k = j + 1;
+        for (; k < sm_uMaxVerticalElements; ++k)
+        {
+          if (m_auPlacedElements[k][i] != uCurrentType)
+          {
+            break;
+          }
+          else
+          {
+            ++uOccurrence;
+          }
+        }
+
+        if (uOccurrence >= 3u)
+        {
+          // Merge
+          m_auPlacedElements[j][i] += 1u;
+          for (uint32 l = j + 1; l < k; ++l)
+          {
+            m_auPlacedElements[l][i] = 0u;
+          }
+
+          bMerged = true;
+        }
+      }
+    }
+  }
+
+  return bMerged;
 }
 
 // ------------------------

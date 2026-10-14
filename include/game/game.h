@@ -43,6 +43,8 @@ public:
   bool WantClose() const { return m_bWantClose; }
   CVector2D GetMousePos() const { return { (float)(GetMouseX() / sm_uRenderFactor), (float)(GetMouseY() / sm_uRenderFactor)}; }
 
+  bool CheckAndMerge();
+
 private:
   CGame();
   ~CGame();
