@@ -1,0 +1,36 @@
+# --- Visual Studio ---
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.filters
+
+# --- CMake (Compilation) ---
+CMakeFiles/
+CMakeSettings.json
+CMakeUserPresets.json
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+vcpkg_installed/
+
+# --- Common Output Directories ---
+build/
+build_mac/
+out/
+
+# --- macOS / Unix ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Backup and Temporary Files ---
+*.log
+*.tmp
+*.bak
+
+# 
+AGENTS.md
