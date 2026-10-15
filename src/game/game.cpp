@@ -2,6 +2,7 @@
 
 #include <random>
 #include <chrono>
+#include <cassert>>
 
 // ------------------------------------------------
 // ------------------------------------------------
@@ -11,6 +12,26 @@
 CGame::CGame()
 {
   memset(m_auPlacedElements, 0, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+  InitializeRandom();
+
+  // Init element distribution by weight
+  //  The formula for the distribution is:
+  //  TotalWeigth = Tier0NumElements * Tier0Weight + Tier1NumElements * Tier1Weight + Tier2NumElements * Tier2Weight + Tier3NumElements * Tier3Weight
+  //  And then: Tier0Weigth / TotalWeight = % per element
+  static_assert(sm_uNumElements == 16u);
+  std::vector<double> vctWeigths(sm_uNumElements);
+  for (uint32 i = 0; i < sm_uNumElements; ++i)
+  {
+    switch (i % 4)
+    {
+      case 0: vctWeigths[i] = 70.0; break; // Basic tier probability
+      case 1: vctWeigths[i] = 22.0; break;
+      case 2: vctWeigths[i] = 7.5;  break;
+      case 3: vctWeigths[i] = 0.5;  break;
+    }
+  }
+
+  m_oElementRandomDistribution = std::discrete_distribution<uint32>(vctWeigths.begin(), vctWeigths.end());
 }
 
 // ------------------------
@@ -64,8 +85,9 @@ void CGame::Init()
   m_spPentagon = std::make_shared<Texture2D>(LoadTexture("assets/pentagon.png"));
   m_spCircle   = std::make_shared<Texture2D>(LoadTexture("assets/circle.png"));
 
-  m_oPendingElements.first  = 1;
-  m_oPendingElements.second = 1;
+  //m_oPendingElements.first  = 1;
+  //m_oPendingElements.second = 5;
+  m_oPendingElements = GetRandomPendingElements();
 }
 
 // ------------------------
@@ -117,10 +139,14 @@ void CGame::Update(float _fDt)
       }
     }
 
+    // Check for merges
     while (CheckAndMerge())
     {
       printf("Merged!\n");
     }
+
+    // Regenerate pending elements
+    m_oPendingElements = GetRandomPendingElements();
   }
 }
 
@@ -151,7 +177,7 @@ void CGame::Draw()
       {
         Texture2D* pTargetTexture = GetTextureByElement(m_auPlacedElements[i][j]);
         const CVector2D v2ElementPos(32u + j * 32u, (sm_uBackgroundYPos + sm_uBackgroundHeight - 32u) - i * 32u);
-        DrawTexture(*pTargetTexture, v2ElementPos.x, v2ElementPos.y, WHITE);
+        DrawTexture(*pTargetTexture, v2ElementPos.x, v2ElementPos.y, GetColorByElement(m_auPlacedElements[i][j]));
       }
     }
   }
@@ -162,9 +188,9 @@ void CGame::Draw()
   CVector2D v2SnappedMousePos(((int32)v2MousePos.x / 32) * 32, ((int32)v2MousePos.y / 32) * 32);
   v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, 64.0f, sm_uWindowWidth - 64.0f);
   Texture2D* pTargetTexture = GetTextureByElement(m_oPendingElements.first);
-  DrawTexture(*pTargetTexture, v2SnappedMousePos.x - 32, sm_uPendingElementHeight, WHITE);
+  DrawTexture(*pTargetTexture, v2SnappedMousePos.x - 32, sm_uPendingElementHeight, GetColorByElement(m_oPendingElements.first));
   pTargetTexture = GetTextureByElement(m_oPendingElements.second);
-  DrawTexture(*pTargetTexture, v2SnappedMousePos.x, sm_uPendingElementHeight, WHITE);
+  DrawTexture(*pTargetTexture, v2SnappedMousePos.x, sm_uPendingElementHeight, GetColorByElement(m_oPendingElements.second));
 
   // --------------
   EndTextureMode();
@@ -278,18 +304,30 @@ Texture2D* CGame::GetTextureByElement(uint8 _uType)
   switch (_uType)
   {
     case 1:
+    case 5:
+    case 9:
+    case 13:
     {
       return m_spTriangle.get();
     }
     case 2:
+    case 6:
+    case 10:
+    case 14:
     {
       return m_spSquare.get();
     }
     case 3:
+    case 7:
+    case 11:
+    case 15:
     {
       return m_spPentagon.get();
     }
     case 4:
+    case 8:
+    case 12:
+    case 16:
     {
       return m_spCircle.get();
     }
@@ -300,6 +338,56 @@ Texture2D* CGame::GetTextureByElement(uint8 _uType)
   }
 
   return nullptr;
+}
+
+// ------------------------
+
+Color CGame::GetColorByElement(uint8 _uType)
+{
+  switch (_uType)
+  {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    {
+      return RED;
+    }
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    {
+      return GREEN;
+    }
+    case 9 :
+    case 10:
+    case 11:
+    case 12:
+    {
+      return BLUE;
+    }
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+    {
+      return WHITE;
+    }
+    default:
+    {
+
+    }
+  }
+
+  return PURPLE;
+}
+
+// ------------------------
+
+std::pair<uint8, uint8> CGame::GetRandomPendingElements()
+{
+  return { m_oElementRandomDistribution(GetRandomEngine()) + 1u, m_oElementRandomDistribution(GetRandomEngine()) + 1u};
 }
 
 // ------------------------

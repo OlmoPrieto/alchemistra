@@ -126,6 +126,21 @@ inline float Remap(const float _fValue, const float _fMinOriginal, const float _
 
 // ------------------------------------------------------------------------------------------
 
+inline void InitializeRandom(uint32_t _uSeed = 0u)
+{
+  std::random_device rd;
+  s_oGen.seed(_uSeed != 0u ? _uSeed : rd());
+}
+
+// ------------------------------------------------------------------------------------------
+
+inline std::mt19937& GetRandomEngine()
+{
+  return s_oGen;
+}
+
+// ------------------------------------------------------------------------------------------
+
 inline float GetRandom(float _fMin, float _fMax)
 {
   if (_fMin == _fMax)

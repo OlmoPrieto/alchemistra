@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <random>
 #include <vector>
 
 #include "base/types.h"
@@ -27,6 +28,7 @@ public:
   static constexpr uint32 sm_uBackgroundXPos        = 32u;
   static constexpr uint32 sm_uBackgroundYPos        = 32u * 3u;
   static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - 32u;
+  static constexpr uint8  sm_uNumElements           = 16u;
 
   static CGame& GetInstance()
   {
@@ -50,11 +52,11 @@ private:
   ~CGame();
 
   Texture2D* GetTextureByElement(uint8 _uType);
+  Color GetColorByElement(uint8 _uType);
+  std::pair<uint8, uint8> GetRandomPendingElements();
 
   // TODO: probably will need to add +2 to vertical, in case you have elements atop and try to dump 2 vertical one (need to represent them but the game will be over)
   uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0u };
-  uint32 m_uPlacedElements = 0u;
-  std::vector<std::pair<CVector2D, uint8>> m_vctPlacedElements;
   std::pair<uint8, uint8> m_oPendingElements;
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spBackground;
@@ -62,5 +64,7 @@ private:
   std::shared_ptr<Texture2D> m_spSquare;
   std::shared_ptr<Texture2D> m_spPentagon;
   std::shared_ptr<Texture2D> m_spCircle;
+  std::discrete_distribution<uint32> m_oElementRandomDistribution;
+  uint32 m_uPlacedElements = 0u;
   bool m_bWantClose = false;
 };
