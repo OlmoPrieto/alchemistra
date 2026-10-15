@@ -58,6 +58,7 @@ public:
   }
 
   bool CheckAndMerge();
+  void ApplyPhysics(); // Tries to make floating elements occupy empty ones
 
 private:
 

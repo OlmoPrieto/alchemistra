@@ -85,9 +85,8 @@ void CGame::Init()
   m_spPentagon = std::make_shared<Texture2D>(LoadTexture("assets/pentagon.png"));
   m_spCircle   = std::make_shared<Texture2D>(LoadTexture("assets/circle.png"));
 
-  m_oPendingElements.first  = 1;
-  m_oPendingElements.second = 5;
-  //m_oPendingElements = GetRandomPendingElements();
+  //m_oPendingElements = { 1, 5};
+  m_oPendingElements = GetRandomPendingElements();
 }
 
 // ------------------------
@@ -154,7 +153,7 @@ void CGame::Update(float _fDt)
     }
 
     printf("Dropping on: ");
-    if (uElement0Column + 1 < sm_uMaxHorizontalElements)
+    if (uElement0Column != 9999u && uElement1Column != 9999u)
     {
       for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
       {
@@ -188,7 +187,7 @@ void CGame::Update(float _fDt)
     }
 
     // Regenerate pending elements
-    //m_oPendingElements = GetRandomPendingElements();
+    m_oPendingElements = GetRandomPendingElements();
   }
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
@@ -320,6 +319,9 @@ bool CGame::CheckAndMerge()
     }
   }
 
+  if (bMerged)
+    ApplyPhysics();
+
   // Vertical
   for (uint32 i = 0; i < sm_uMaxHorizontalElements; ++i)
   {
@@ -357,7 +359,49 @@ bool CGame::CheckAndMerge()
     }
   }
 
+  if (bMerged)
+    ApplyPhysics();
+
   return bMerged;
+}
+
+// ------------------------
+
+void CGame::ApplyPhysics()
+{
+  // Start checking by columns
+  for (uint32 i = 0; i < sm_uMaxHorizontalElements; ++i)
+  {
+    // For each column, start from the bottom
+    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+    {
+      // If an element is empty 
+      if (m_auPlacedElements[j][i] == 0u)
+      {
+        // Start looking for elements above
+        uint32 k = j;
+        bool bFoundElement = false;
+        for (; k < sm_uMaxVerticalElements; ++k)
+        {
+          if (m_auPlacedElements[k][i] != 0u)
+          {
+            bFoundElement = true;
+            break;
+          }
+        }
+
+        if (bFoundElement)
+        {
+          for (uint32 l = j; l < sm_uMaxVerticalElements && k + (l - j) < sm_uMaxVerticalElements; ++l)
+          {
+            std::swap(m_auPlacedElements[l][i], m_auPlacedElements[k + (l - j)][i]);
+          }
+
+          j = k;
+        }
+      }
+    }
+  }
 }
 
 // ------------------------
