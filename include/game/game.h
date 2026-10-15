@@ -48,6 +48,18 @@ public:
   bool CheckAndMerge();
 
 private:
+
+  // This will represent where the element on the left of the pending elements is
+  enum class EPendingElementsState : uint8
+  {
+    WEST = 0,
+    NORTH,
+    EAST,
+    SOUTH,
+
+    COUNT = 4
+  };
+  
   CGame();
   ~CGame();
 
@@ -66,5 +78,6 @@ private:
   std::shared_ptr<Texture2D> m_spCircle;
   std::discrete_distribution<uint32> m_oElementRandomDistribution;
   uint32 m_uPlacedElements = 0u;
+  EPendingElementsState m_ePendingElementsState = EPendingElementsState::WEST;
   bool m_bWantClose = false;
 };

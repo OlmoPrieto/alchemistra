@@ -148,6 +148,12 @@ void CGame::Update(float _fDt)
     // Regenerate pending elements
     m_oPendingElements = GetRandomPendingElements();
   }
+
+  if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+  {
+    // Rotate pending elements clockwise
+    m_ePendingElementsState = (EPendingElementsState)(((uint8)m_ePendingElementsState + 1) & ((uint8)EPendingElementsState::COUNT - 1));
+  }
 }
 
 // ------------------------
@@ -187,10 +193,50 @@ void CGame::Draw()
   const CVector2D v2MousePos = GetMousePos();
   CVector2D v2SnappedMousePos(((int32)v2MousePos.x / 32) * 32, ((int32)v2MousePos.y / 32) * 32);
   v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, 64.0f, sm_uWindowWidth - 64.0f);
+  CVector2D v2Element0Pos;
+  CVector2D v2Element1Pos;
+
+  switch (m_ePendingElementsState)
+  {
+    case EPendingElementsState::WEST:
+    {
+      v2Element0Pos.x = v2SnappedMousePos.x - 32;
+      v2Element0Pos.y = sm_uPendingElementHeight;
+      v2Element1Pos.x = v2SnappedMousePos.x;
+      v2Element1Pos.y = sm_uPendingElementHeight;
+      break;
+    }
+    case EPendingElementsState::NORTH:
+    {
+      v2Element0Pos.x = v2SnappedMousePos.x;
+      v2Element0Pos.y = sm_uPendingElementHeight - 32;
+      v2Element1Pos.x = v2SnappedMousePos.x;
+      v2Element1Pos.y = sm_uPendingElementHeight;
+      break;
+    }
+    case EPendingElementsState::EAST:
+    {
+      v2Element0Pos.x = v2SnappedMousePos.x;
+      v2Element0Pos.y = sm_uPendingElementHeight;
+      v2Element1Pos.x = v2SnappedMousePos.x - 32;
+      v2Element1Pos.y = sm_uPendingElementHeight;
+      break;
+    }
+    case EPendingElementsState::SOUTH:
+    {
+      v2Element0Pos.x = v2SnappedMousePos.x;
+      v2Element0Pos.y = sm_uPendingElementHeight;
+      v2Element1Pos.x = v2SnappedMousePos.x;
+      v2Element1Pos.y = sm_uPendingElementHeight - 32;
+      break;
+    }
+    case EPendingElementsState::COUNT: break;
+  }
+
   Texture2D* pTargetTexture = GetTextureByElement(m_oPendingElements.first);
-  DrawTexture(*pTargetTexture, v2SnappedMousePos.x - 32, sm_uPendingElementHeight, GetColorByElement(m_oPendingElements.first));
+  DrawTexture(*pTargetTexture, v2Element0Pos.x, v2Element0Pos.y, GetColorByElement(m_oPendingElements.first));
   pTargetTexture = GetTextureByElement(m_oPendingElements.second);
-  DrawTexture(*pTargetTexture, v2SnappedMousePos.x, sm_uPendingElementHeight, GetColorByElement(m_oPendingElements.second));
+  DrawTexture(*pTargetTexture, v2Element1Pos.x, v2Element1Pos.y, GetColorByElement(m_oPendingElements.second));
 
   // --------------
   EndTextureMode();
@@ -208,7 +254,7 @@ void CGame::Draw()
   Rectangle oDestRect = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
 
   // Draw virtual canvas stretching perfectly in the big window
-  DrawTexturePro(m_oRenderTarget.texture, oSourceRect, oDestRect, Vector2{ 0, 0 }, 0.0f, WHITE);
+  DrawTexturePro(m_oRenderTarget.texture, oSourceRect, oDestRect, Vector2{ 0.0f, 0.0f }, 0.0f, WHITE);
 
   // --------------
   EndDrawing();
