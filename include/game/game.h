@@ -21,13 +21,14 @@ public:
   static constexpr uint32 sm_uVirtualWindowWidth  = sm_uWindowWidth   * sm_uRenderFactor;
   static constexpr uint32 sm_uVirtualWindowHeight = sm_uWindowHeight  * sm_uRenderFactor;
 
+  static constexpr uint32 sm_uElementPixelSize      = 32u;
   static constexpr uint32 sm_uMaxHorizontalElements = 10u;
   static constexpr uint32 sm_uMaxVerticalElements   = 8u;
-  static constexpr uint32 sm_uBackgroundWidth       = sm_uWindowWidth - 32u * 2u; // Two sprites empty on the sides
-  static constexpr uint32 sm_uBackgroundHeight      = sm_uWindowHeight - 32u * 5u - 32u * 3u;
-  static constexpr uint32 sm_uBackgroundXPos        = 32u;
-  static constexpr uint32 sm_uBackgroundYPos        = 32u * 3u;
-  static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - 32u;
+  static constexpr uint32 sm_uBackgroundWidth       = sm_uWindowWidth - sm_uElementPixelSize * 2u; // Two sprites empty on the sides
+  static constexpr uint32 sm_uBackgroundHeight      = sm_uWindowHeight - sm_uElementPixelSize * 5u - sm_uElementPixelSize * 3u;
+  static constexpr uint32 sm_uBackgroundXPos        = sm_uElementPixelSize;
+  static constexpr uint32 sm_uBackgroundYPos        = sm_uElementPixelSize * 3u;
+  static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - sm_uElementPixelSize;
   static constexpr uint8  sm_uNumElements           = 16u;
 
   static CGame& GetInstance()
@@ -44,6 +45,17 @@ public:
   void Draw();
   bool WantClose() const { return m_bWantClose; }
   CVector2D GetMousePos() const { return { (float)(GetMouseX() / sm_uRenderFactor), (float)(GetMouseY() / sm_uRenderFactor)}; }
+  CVector2D GetMousePosSnappedToBackground(int32 _iSnappedTo = 32u) 
+  { 
+    // Ints to avoid overflows
+    CVector2D v2SnappedPos(GetMousePos());
+    //v2SnappedPos.x = (((int32)v2SnappedPos.x + _iSnappedTo / 2) / _iSnappedTo) * _iSnappedTo;
+    //v2SnappedPos.y = (((int32)v2SnappedPos.y + _iSnappedTo / 2) / _iSnappedTo) * _iSnappedTo;
+    v2SnappedPos.x = ((int32)v2SnappedPos.x / _iSnappedTo) * _iSnappedTo;
+    v2SnappedPos.y = ((int32)v2SnappedPos.y / _iSnappedTo) * _iSnappedTo;
+    v2SnappedPos.x = Clamp(v2SnappedPos.x, (float)sm_uBackgroundXPos, (float)sm_uBackgroundXPos + (float)sm_uBackgroundWidth);
+    return v2SnappedPos;
+  }
 
   bool CheckAndMerge();
 
@@ -66,6 +78,7 @@ private:
   Texture2D* GetTextureByElement(uint8 _uType);
   Color GetColorByElement(uint8 _uType);
   std::pair<uint8, uint8> GetRandomPendingElements();
+  std::pair<CVector2D, CVector2D> GetPendingElementsPosition();
 
   // TODO: probably will need to add +2 to vertical, in case you have elements atop and try to dump 2 vertical one (need to represent them but the game will be over)
   uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0u };

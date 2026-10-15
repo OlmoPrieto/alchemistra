@@ -85,9 +85,9 @@ void CGame::Init()
   m_spPentagon = std::make_shared<Texture2D>(LoadTexture("assets/pentagon.png"));
   m_spCircle   = std::make_shared<Texture2D>(LoadTexture("assets/circle.png"));
 
-  //m_oPendingElements.first  = 1;
-  //m_oPendingElements.second = 5;
-  m_oPendingElements = GetRandomPendingElements();
+  m_oPendingElements.first  = 1;
+  m_oPendingElements.second = 5;
+  //m_oPendingElements = GetRandomPendingElements();
 }
 
 // ------------------------
@@ -111,16 +111,58 @@ void CGame::Update(float _fDt)
     printf("Snapped pos: [%.2f, %.2f]\n", v2SnappedMousePos.x, v2SnappedMousePos.y);
     const uint32 uColumn = Clamp(((int32)v2SnappedMousePos.x - 32 * 2) / 32, 0u, sm_uMaxHorizontalElements - 1u); // 32u*2u because you need to subtract 2 elements to the left
     //  Then find the height of that row (depending on the stacked elements)
+    
+    std::pair<CVector2D, CVector2D> oPendingElementsPos = GetPendingElementsPosition();
+    uint32 uElement0Column = 9999u;
+    uint32 uElement1Column = 9999u;
+    uint8 uElement0 = 0xff;
+    uint8 uElement1 = 0xff;
+    switch (m_ePendingElementsState)
+    {
+      case EPendingElementsState::WEST:
+      {
+        uElement0Column = (uint32)(((int32)oPendingElementsPos.first.x - 32) / 32);
+        uElement1Column = uElement0Column + 1;
+        uElement0 = m_oPendingElements.first;
+        uElement1 = m_oPendingElements.second;
+        break;
+      }
+      case EPendingElementsState::NORTH:
+      {
+        uElement0Column = (oPendingElementsPos.first.x - 32) / 32;
+        uElement1Column = uElement0Column;
+        uElement0 = m_oPendingElements.second;
+        uElement1 = m_oPendingElements.first;
+        break;
+      }
+      case EPendingElementsState::EAST:
+      {
+        uElement0Column = (uint32)(((int32)oPendingElementsPos.second.x - 32) / 32);
+        uElement1Column = uElement0Column + 1;
+        uElement0 = m_oPendingElements.second;
+        uElement1 = m_oPendingElements.first;
+        break;
+      }
+      case EPendingElementsState::SOUTH:
+      {
+        uElement0Column = (oPendingElementsPos.first.x - 32) / 32;
+        uElement1Column = uElement0Column;
+        uElement0 = m_oPendingElements.first;
+        uElement1 = m_oPendingElements.second;
+        break;
+      }
+    }
+
     printf("Dropping on: ");
-    if (uColumn + 1 < sm_uMaxHorizontalElements)
+    if (uElement0Column + 1 < sm_uMaxHorizontalElements)
     {
       for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
       {
-        if (m_auPlacedElements[i][uColumn] == 0)
+        if (m_auPlacedElements[i][uElement0Column] == 0)
         {
           // Found a place to put the element
-          m_auPlacedElements[i][uColumn] = m_oPendingElements.first;
-          printf("[%u|%u] ", i, uColumn);
+          m_auPlacedElements[i][uElement0Column] = uElement0;
+          printf("[%u|%u] ", i, uElement0Column);
           ++m_uPlacedElements;
           break;
         }
@@ -128,11 +170,11 @@ void CGame::Update(float _fDt)
     
       for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
       {
-        if (m_auPlacedElements[i][uColumn + 1] == 0)
+        if (m_auPlacedElements[i][uElement1Column] == 0)
         {
           // Found a place to put the element
-          m_auPlacedElements[i][uColumn + 1] = m_oPendingElements.second;
-          printf("and [%u|%u]\n", i, uColumn + 1);
+          m_auPlacedElements[i][uElement1Column] = uElement1;
+          printf("and [%u|%u]\n", i, uElement1Column);
           ++m_uPlacedElements;
           break;
         }
@@ -146,7 +188,7 @@ void CGame::Update(float _fDt)
     }
 
     // Regenerate pending elements
-    m_oPendingElements = GetRandomPendingElements();
+    //m_oPendingElements = GetRandomPendingElements();
   }
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
@@ -190,58 +232,31 @@ void CGame::Draw()
 #endif
 
   // Draw pending elements
-  const CVector2D v2MousePos = GetMousePos();
-  CVector2D v2SnappedMousePos(((int32)v2MousePos.x / 32) * 32, ((int32)v2MousePos.y / 32) * 32);
-  v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, 64.0f, sm_uWindowWidth - 64.0f);
-  CVector2D v2Element0Pos;
-  CVector2D v2Element1Pos;
-
-  switch (m_ePendingElementsState)
-  {
-    case EPendingElementsState::WEST:
-    {
-      v2Element0Pos.x = v2SnappedMousePos.x - 32;
-      v2Element0Pos.y = sm_uPendingElementHeight;
-      v2Element1Pos.x = v2SnappedMousePos.x;
-      v2Element1Pos.y = sm_uPendingElementHeight;
-      break;
-    }
-    case EPendingElementsState::NORTH:
-    {
-      v2Element0Pos.x = v2SnappedMousePos.x;
-      v2Element0Pos.y = sm_uPendingElementHeight - 32;
-      v2Element1Pos.x = v2SnappedMousePos.x;
-      v2Element1Pos.y = sm_uPendingElementHeight;
-      break;
-    }
-    case EPendingElementsState::EAST:
-    {
-      v2Element0Pos.x = v2SnappedMousePos.x;
-      v2Element0Pos.y = sm_uPendingElementHeight;
-      v2Element1Pos.x = v2SnappedMousePos.x - 32;
-      v2Element1Pos.y = sm_uPendingElementHeight;
-      break;
-    }
-    case EPendingElementsState::SOUTH:
-    {
-      v2Element0Pos.x = v2SnappedMousePos.x;
-      v2Element0Pos.y = sm_uPendingElementHeight;
-      v2Element1Pos.x = v2SnappedMousePos.x;
-      v2Element1Pos.y = sm_uPendingElementHeight - 32;
-      break;
-    }
-    case EPendingElementsState::COUNT: break;
-  }
-
+  std::pair<CVector2D, CVector2D> oPendingElementsPos = GetPendingElementsPosition();
   Texture2D* pTargetTexture = GetTextureByElement(m_oPendingElements.first);
-  DrawTexture(*pTargetTexture, v2Element0Pos.x, v2Element0Pos.y, GetColorByElement(m_oPendingElements.first));
+  /*DrawTexture(*pTargetTexture, 
+    Clamp(oPendingElementsPos.first.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth), 
+    oPendingElementsPos.first.y, 
+    GetColorByElement(m_oPendingElements.first));*/
+  DrawTexture(*pTargetTexture,
+    oPendingElementsPos.first.x,
+    oPendingElementsPos.first.y,
+    GetColorByElement(m_oPendingElements.first));
   pTargetTexture = GetTextureByElement(m_oPendingElements.second);
-  DrawTexture(*pTargetTexture, v2Element1Pos.x, v2Element1Pos.y, GetColorByElement(m_oPendingElements.second));
+  /*DrawTexture(*pTargetTexture, 
+    Clamp(oPendingElementsPos.second.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth),
+    oPendingElementsPos.second.y, 
+    GetColorByElement(m_oPendingElements.second));*/
+  DrawTexture(*pTargetTexture,
+    oPendingElementsPos.second.x,
+    oPendingElementsPos.second.y,
+    GetColorByElement(m_oPendingElements.second));
 
   // --------------
   EndTextureMode();
 
-  // -----------------------------
+  // -------- END    REGULAR  DRAWING     --------
+  // -------- BEGIN RENDER TARGET DRAWING --------
 
   BeginDrawing();
   ClearBackground(BLACK);
@@ -265,6 +280,8 @@ void CGame::Draw()
 bool CGame::CheckAndMerge()
 {
   bool bMerged = false;
+
+  // TODO: make the merged cell to be the one where you placed the element???
 
   // Horizontal
   for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
@@ -418,7 +435,7 @@ Color CGame::GetColorByElement(uint8 _uType)
     case 15:
     case 16:
     {
-      return WHITE;
+      return YELLOW;
     }
     default:
     {
@@ -434,6 +451,57 @@ Color CGame::GetColorByElement(uint8 _uType)
 std::pair<uint8, uint8> CGame::GetRandomPendingElements()
 {
   return { m_oElementRandomDistribution(GetRandomEngine()) + 1u, m_oElementRandomDistribution(GetRandomEngine()) + 1u};
+}
+
+// ------------------------
+
+std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
+{
+  std::pair<CVector2D, CVector2D> oPositions;
+  CVector2D v2SnappedMousePos = GetMousePosSnappedToBackground();
+  // Dont allow X leftmost and rightmost pos to exceed the background (which is aligned to sm_uBackgroundXPos)
+  switch (m_ePendingElementsState)
+  {
+    case EPendingElementsState::WEST:
+    {
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos * 2, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      oPositions.first.x  = v2SnappedMousePos.x - 32.0f;
+      oPositions.first.y  = sm_uPendingElementHeight;
+      oPositions.second.x = v2SnappedMousePos.x;
+      oPositions.second.y = sm_uPendingElementHeight;
+      break;
+    }
+    case EPendingElementsState::NORTH:
+    {
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      oPositions.first.x  = v2SnappedMousePos.x;
+      oPositions.first.y  = sm_uPendingElementHeight - 32.0f;
+      oPositions.second.x = v2SnappedMousePos.x;
+      oPositions.second.y = sm_uPendingElementHeight;
+      break;
+    }
+    case EPendingElementsState::EAST:
+    {
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      oPositions.first.x  = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos * 2, sm_uWindowWidth - sm_uBackgroundXPos);
+      oPositions.first.y  = sm_uPendingElementHeight;
+      oPositions.second.x = oPositions.first.x - 32.0f;
+      oPositions.second.y = sm_uPendingElementHeight;
+      break;
+    }
+    case EPendingElementsState::SOUTH:
+    {
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      oPositions.first.x  = v2SnappedMousePos.x;
+      oPositions.first.y  = sm_uPendingElementHeight;
+      oPositions.second.x = v2SnappedMousePos.x;
+      oPositions.second.y = sm_uPendingElementHeight - 32.0f;
+      break;
+    }
+    case EPendingElementsState::COUNT: break;
+  }
+
+  return oPositions;
 }
 
 // ------------------------
