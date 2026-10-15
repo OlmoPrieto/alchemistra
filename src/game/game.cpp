@@ -38,23 +38,23 @@ CGame::CGame()
 
 CGame::~CGame()
 {
-  if (m_spBackground)
+  if (m_spBackground && m_spBackground.use_count() == 0)
   {
     UnloadTexture(*m_spBackground.get());
   }
-  if (m_spTriangle)
+  if (m_spTriangle && m_spTriangle.use_count() == 0)
   {
     UnloadTexture(*m_spTriangle.get());
   }
-  if (m_spSquare)
+  if (m_spSquare && m_spSquare.use_count() == 0)
   {
     UnloadTexture(*m_spSquare.get());
   }
-  if (m_spPentagon)
+  if (m_spPentagon && m_spPentagon.use_count() == 0)
   {
     UnloadTexture(*m_spPentagon.get());
   }
-  if (m_spCircle)
+  if (m_spCircle && m_spCircle.use_count() == 0)
   {
     UnloadTexture(*m_spCircle.get());
   }
