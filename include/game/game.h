@@ -30,6 +30,7 @@ public:
   static constexpr uint32 sm_uBackgroundYPos        = sm_uElementPixelSize * 3u;
   static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - sm_uElementPixelSize;
   static constexpr uint8  sm_uNumElements           = 16u;
+  static constexpr uint8  sm_uSaveDataVersion       = 0u;
 
   static CGame& GetInstance()
   {
@@ -61,6 +62,8 @@ public:
   void ApplyPhysics(); // Tries to make floating elements occupy empty ones
 
   void PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizontalElements]);
+  void SaveGame(const std::string& _sPath);
+  void SaveCurrentState();
 
 private:
 

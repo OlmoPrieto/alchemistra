@@ -2,7 +2,9 @@
 
 #include <random>
 #include <chrono>
-#include <cassert>>
+#include <cassert>
+#include <fstream>
+#include <filesystem>
 
 #include "ui/ui.h"
 
@@ -273,10 +275,7 @@ void CGame::Draw()
   {
     if (m_uCurrentGameState == UINT32_MAX)
     {
-      m_oCurrentGameState.m_uPendingElementsState = (uint8)m_ePendingElementsState;
-      m_oCurrentGameState.m_uPendingElement0 = m_oPendingElements.first;
-      m_oCurrentGameState.m_uPendingElement1 = m_oPendingElements.second;
-      memcpy(m_oCurrentGameState.m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+      SaveCurrentState();
       m_uCurrentGameState = m_vctPreviousStates.size();
     }
 
@@ -304,12 +303,23 @@ void CGame::Draw()
     }
     else
     {
-      printf("Going to the present state\n");
-      m_ePendingElementsState   = (EPendingElementsState)m_oCurrentGameState.m_uPendingElementsState;
-      m_oPendingElements.first  = m_oCurrentGameState.m_uPendingElement0;
-      m_oPendingElements.second = m_oCurrentGameState.m_uPendingElement1;
-      memcpy(m_auPlacedElements, m_oCurrentGameState.m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+      if (m_uCurrentGameState != UINT32_MAX)
+      {
+        printf("Going to the present state\n");
+        m_ePendingElementsState   = (EPendingElementsState)m_oCurrentGameState.m_uPendingElementsState;
+        m_oPendingElements.first  = m_oCurrentGameState.m_uPendingElement0;
+        m_oPendingElements.second = m_oCurrentGameState.m_uPendingElement1;
+        memcpy(m_auPlacedElements, m_oCurrentGameState.m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+
+        m_uCurrentGameState = UINT32_MAX;
+      }
     }
+  }
+
+  const CVector2D v2SaveButtonSize = CButton::CalculateSize("SAVE");
+  if (CButton("SAVE", CVector2D(sm_uWindowWidth * 0.5f - v2SaveButtonSize.x * 0.5f, sm_uWindowHeight - v2SaveButtonSize.y * 3)))
+  {
+    SaveGame("saves/test.txt");
   }
 
   // --------------
@@ -479,6 +489,64 @@ void CGame::PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizo
     printf("\n");
   }
   printf("------------------------------------\n");
+}
+
+// ------------------------
+
+void CGame::SaveGame(const std::string& _sPath)
+{
+  std::filesystem::path oPath(_sPath);
+  std::ofstream oFile(oPath);
+  if (oFile.is_open() == false)
+  {
+    assert(false);
+    return;
+  }
+
+  oFile << (uint32)sm_uSaveDataVersion << "\n";
+  oFile << (uint32)sm_uMaxVerticalElements << "\n";
+  oFile << (uint32)sm_uMaxHorizontalElements << "\n";
+  oFile << (uint32)m_vctPreviousStates.size() << "\n";
+  for (uint32 i = 0; i < m_vctPreviousStates.size(); ++i)
+  {
+    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElementsState << "\n";
+    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElement0 << "\n";
+    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElement1 << "\n";
+    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+    {
+      for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
+      {
+        oFile << (uint32)m_vctPreviousStates[i].m_auPlacedElements[j][k] << " ";
+      }
+      oFile << "\n";
+    }
+    oFile << "\n";
+  }
+
+  SaveCurrentState();
+  oFile << (uint32)m_oCurrentGameState.m_uPendingElementsState << "\n";
+  oFile << (uint32)m_oCurrentGameState.m_uPendingElement0 << "\n";
+  oFile << (uint32)m_oCurrentGameState.m_uPendingElement1 << "\n";
+  for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+  {
+    for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
+    {
+      oFile << (uint32)m_oCurrentGameState.m_auPlacedElements[j][k] << " ";
+    }
+    oFile << "\n";
+  }
+
+  printf("File saved on [%s]\n", _sPath.c_str());
+}
+
+// ------------------------
+
+void CGame::SaveCurrentState()
+{
+  m_oCurrentGameState.m_uPendingElementsState = (uint8)m_ePendingElementsState;
+  m_oCurrentGameState.m_uPendingElement0 = m_oPendingElements.first;
+  m_oCurrentGameState.m_uPendingElement1 = m_oPendingElements.second;
+  memcpy(m_oCurrentGameState.m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
 }
 
 // ------------------------
