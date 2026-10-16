@@ -4,6 +4,8 @@
 #include <chrono>
 #include <cassert>>
 
+#include "ui/ui.h"
+
 // ------------------------------------------------
 // ------------------------------------------------
 
@@ -18,6 +20,10 @@ CGame::CGame()
   //  The formula for the distribution is:
   //  TotalWeigth = Tier0NumElements * Tier0Weight + Tier1NumElements * Tier1Weight + Tier2NumElements * Tier2Weight + Tier3NumElements * Tier3Weight
   //  And then: Tier0Weigth / TotalWeight = % per element
+  //  Eg. 70.0 -> 69.65%
+  //      22.0 -> 21.89%
+  //       7.0 ->  7.46%
+  //       0.5 ->  1.00%
   static_assert(sm_uNumElements == 16u);
   std::vector<double> vctWeigths(sm_uNumElements);
   for (uint32 i = 0; i < sm_uNumElements; ++i)
@@ -25,9 +31,9 @@ CGame::CGame()
     switch (i % 4)
     {
       case 0: vctWeigths[i] = 70.0; break; // Basic tier probability
-      case 1: vctWeigths[i] = 22.0; break;
-      case 2: vctWeigths[i] = 7.5;  break;
-      case 3: vctWeigths[i] = 0.5;  break;
+      case 1: vctWeigths[i] = 20.0; break;
+      case 2: vctWeigths[i] =  5.0; break;
+      case 3: vctWeigths[i] =  0.2; break;
     }
   }
 
@@ -101,16 +107,27 @@ void CGame::Update(float _fDt)
   }
 
   const CVector2D v2MousePos = GetMousePos();
-  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && v2MousePos.x >= 32u && v2MousePos.x <= sm_uWindowWidth - 32u)
+  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && 
+    v2MousePos.x >= sm_uBackgroundXPos && v2MousePos.x <= sm_uBackgroundXPos + sm_uBackgroundWidth &&
+    v2MousePos.y >= sm_uBackgroundYPos && v2MousePos.y <= sm_uBackgroundYPos + sm_uBackgroundHeight
+  )
   {
+    // Save state first
+    printf("Saving game state %u\n", (uint32)m_vctPreviousStates.size());
+    if (m_uPreviousGameState >= m_vctPreviousStates.size())
+    {
+      m_vctPreviousStates.resize(m_uPreviousGameState);
+    }
+    m_uPreviousGameState = m_vctPreviousStates.size();
+    m_uCurrentGameState = UINT32_MAX;
+    m_vctPreviousStates.emplace_back();
+    m_vctPreviousStates.back().m_uPendingElementsState = (uint8)m_ePendingElementsState;
+    m_vctPreviousStates.back().m_uPendingElement0 = m_oPendingElements.first;
+    m_vctPreviousStates.back().m_uPendingElement1 = m_oPendingElements.second;
+    memcpy(m_vctPreviousStates.back().m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+    PrintGrid(m_vctPreviousStates.back().m_auPlacedElements);
+
     // Drop elements
-    //  Translate mouse coordinates into row/column indices
-    //  First find out the column
-    const CVector2D v2SnappedMousePos(((int32)v2MousePos.x / 32) * 32, ((int32)v2MousePos.y / 32) * 32);
-    printf("Snapped pos: [%.2f, %.2f]\n", v2SnappedMousePos.x, v2SnappedMousePos.y);
-    const uint32 uColumn = Clamp(((int32)v2SnappedMousePos.x - 32 * 2) / 32, 0u, sm_uMaxHorizontalElements - 1u); // 32u*2u because you need to subtract 2 elements to the left
-    //  Then find the height of that row (depending on the stacked elements)
-    
     std::pair<CVector2D, CVector2D> oPendingElementsPos = GetPendingElementsPosition();
     uint32 uElement0Column = 9999u;
     uint32 uElement1Column = 9999u;
@@ -250,6 +267,50 @@ void CGame::Draw()
     oPendingElementsPos.second.x,
     oPendingElementsPos.second.y,
     GetColorByElement(m_oPendingElements.second));
+
+  // UI
+  if (CButton("Prev.", CVector2D()))
+  {
+    if (m_uCurrentGameState == UINT32_MAX)
+    {
+      m_oCurrentGameState.m_uPendingElementsState = (uint8)m_ePendingElementsState;
+      m_oCurrentGameState.m_uPendingElement0 = m_oPendingElements.first;
+      m_oCurrentGameState.m_uPendingElement1 = m_oPendingElements.second;
+      memcpy(m_oCurrentGameState.m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+      m_uCurrentGameState = m_vctPreviousStates.size();
+    }
+
+    printf("Going to previous state: %u\n", m_uPreviousGameState);
+    PrintGrid(m_vctPreviousStates[m_uPreviousGameState].m_auPlacedElements);
+
+    m_ePendingElementsState = (EPendingElementsState)(m_vctPreviousStates[m_uPreviousGameState].m_uPendingElementsState);
+    m_oPendingElements = { m_vctPreviousStates[m_uPreviousGameState].m_uPendingElement0, m_vctPreviousStates[m_uPreviousGameState].m_uPendingElement1 };
+    memcpy(m_auPlacedElements, m_vctPreviousStates[m_uPreviousGameState].m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+
+    m_uPreviousGameState = Clamp((int32)m_uPreviousGameState - 1, 0, m_vctPreviousStates.size());
+  }
+  const CVector2D v2NextButtonSize = CButton::CalculateSize("Next");
+  if (CButton("Next", CVector2D(sm_uWindowWidth - v2NextButtonSize.x, 0.0f)))
+  {
+    if (m_uPreviousGameState < m_vctPreviousStates.size() - 1)
+    {
+      m_uPreviousGameState = Clamp((int32)m_uPreviousGameState + 1, 0, m_vctPreviousStates.size() - 1);
+      printf("Going to next state: %u\n", m_uPreviousGameState);
+      PrintGrid(m_vctPreviousStates[m_uPreviousGameState].m_auPlacedElements);
+
+      m_ePendingElementsState = (EPendingElementsState)(m_vctPreviousStates[m_uPreviousGameState].m_uPendingElementsState);
+      m_oPendingElements = { m_vctPreviousStates[m_uPreviousGameState].m_uPendingElement0, m_vctPreviousStates[m_uPreviousGameState].m_uPendingElement1 };
+      memcpy(m_auPlacedElements, m_vctPreviousStates[m_uPreviousGameState].m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+    }
+    else
+    {
+      printf("Going to the present state\n");
+      m_ePendingElementsState   = (EPendingElementsState)m_oCurrentGameState.m_uPendingElementsState;
+      m_oPendingElements.first  = m_oCurrentGameState.m_uPendingElement0;
+      m_oPendingElements.second = m_oCurrentGameState.m_uPendingElement1;
+      memcpy(m_auPlacedElements, m_oCurrentGameState.m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+    }
+  }
 
   // --------------
   EndTextureMode();
@@ -402,6 +463,22 @@ void CGame::ApplyPhysics()
       }
     }
   }
+}
+
+// ------------------------
+
+void CGame::PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizontalElements])
+{
+  printf("------------------------------------\n");
+  for (int32 i = sm_uMaxVerticalElements - 1; i >= 0 ; --i)
+  {
+    for (uint32 j = 0; j < sm_uMaxHorizontalElements; ++j)
+    {
+      printf("%u ", _auGrid[(uint32)i][(uint32)j]);
+    }
+    printf("\n");
+  }
+  printf("------------------------------------\n");
 }
 
 // ------------------------

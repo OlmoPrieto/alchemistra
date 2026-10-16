@@ -60,6 +60,8 @@ public:
   bool CheckAndMerge();
   void ApplyPhysics(); // Tries to make floating elements occupy empty ones
 
+  void PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizontalElements]);
+
 private:
 
   // This will represent where the element on the left of the pending elements is
@@ -72,6 +74,14 @@ private:
 
     COUNT = 4
   };
+
+  struct SGameState
+  {
+    uint8 m_uPendingElementsState = 0;
+    uint8 m_uPendingElement0 = 0;
+    uint8 m_uPendingElement1 = 0;
+    uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0 };
+  };
   
   CGame();
   ~CGame();
@@ -80,6 +90,12 @@ private:
   Color GetColorByElement(uint8 _uType);
   std::pair<uint8, uint8> GetRandomPendingElements();
   std::pair<CVector2D, CVector2D> GetPendingElementsPosition();
+
+  //std::vector<uint8[3 + sm_uMaxVerticalElements * sm_uMaxHorizontalElements]> m_vctPreviousStates;
+  std::vector<SGameState> m_vctPreviousStates;
+  SGameState m_oCurrentGameState;
+  uint32 m_uCurrentGameState = UINT32_MAX;
+  uint32 m_uPreviousGameState = 0u;
 
   // TODO: probably will need to add +2 to vertical, in case you have elements atop and try to dump 2 vertical one (need to represent them but the game will be over)
   uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0u };
