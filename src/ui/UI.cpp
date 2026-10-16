@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "game/game.h"
+
 namespace
 {
   SUIButtonConfig s_oDefaultButtonConfig;
@@ -35,7 +37,10 @@ namespace
     if (!_bEnabled)
       return EUIElementState::DISABLED;
 
-    if (!CheckCollisionPointRec(GetMousePosition(), _oBounds))
+    Vector2 v2MousePos = GetMousePosition();
+    v2MousePos.x /= CGame::sm_uRenderFactor;
+    v2MousePos.y /= CGame::sm_uRenderFactor;
+    if (!CheckCollisionPointRec(v2MousePos, _oBounds))
       return EUIElementState::NORMAL;
 
     return IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? EUIElementState::PRESSED : EUIElementState::HOVERED;
@@ -168,7 +173,10 @@ void CButton::Draw(const char* _pText, const CVector2D& _v2Position, const SUIBu
   const CVector2D v2Size = CalculateSize(pText, _oConfig);
   const Rectangle oBounds = ToRectangle(_v2Position, v2Size);
   m_eState = GetElementState(oBounds, _oConfig.m_bEnabled);
-  m_bPressed = _oConfig.m_bEnabled && CheckCollisionPointRec(GetMousePosition(), oBounds) &&
+  Vector2 v2MousePos = GetMousePosition();
+  v2MousePos.x /= CGame::sm_uRenderFactor;
+  v2MousePos.y /= CGame::sm_uRenderFactor;
+  m_bPressed = _oConfig.m_bEnabled && CheckCollisionPointRec(v2MousePos, oBounds) &&
     IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 
   const SUIStateColors& oColors = GetStateColors(_oConfig.m_oNormal, _oConfig.m_oHovered,
@@ -217,7 +225,10 @@ void CCheckbox::Draw(const char* _pText, bool* _pbValue, const CVector2D& _v2Pos
   const Rectangle& oInteractionBounds = _bOnlyBox ? oBoxBounds : oHitBounds;
   const bool bEnabled = _oConfig.m_bEnabled && _pbValue;
   m_eState = GetElementState(oInteractionBounds, bEnabled);
-  m_bChanged = bEnabled && CheckCollisionPointRec(GetMousePosition(), oInteractionBounds) &&
+  Vector2 v2MousePos = GetMousePosition();
+  v2MousePos.x /= CGame::sm_uRenderFactor;
+  v2MousePos.y /= CGame::sm_uRenderFactor;
+  m_bChanged = bEnabled && CheckCollisionPointRec(v2MousePos, oInteractionBounds) &&
     IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
   if (m_bChanged)
     *_pbValue = !*_pbValue;
@@ -275,7 +286,10 @@ void CInputText::Draw(std::string* _pText, const CVector2D& _v2Position, const S
   const Rectangle oBounds = ToRectangle(_v2Position, _oConfig.m_v2Size);
   const bool bEnabled = _oConfig.m_bEnabled && _pText;
   m_eState = GetElementState(oBounds, bEnabled);
-  const bool bClicked = bEnabled && CheckCollisionPointRec(GetMousePosition(), oBounds) &&
+  Vector2 v2MousePos = GetMousePosition();
+  v2MousePos.x /= CGame::sm_uRenderFactor;
+  v2MousePos.y /= CGame::sm_uRenderFactor;
+  const bool bClicked = bEnabled && CheckCollisionPointRec(v2MousePos, oBounds) &&
     IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
   if (bClicked)
@@ -284,7 +298,7 @@ void CInputText::Draw(std::string* _pText, const CVector2D& _v2Position, const S
       s_fInputTextScroll = 0.0f;
     s_pFocusedInputText = _pText;
     const float fTextLeft = oBounds.x + _oConfig.m_v2TextPadding.x;
-    s_iInputTextCursor = GetCursorPositionAtX(*_pText, GetMousePosition().x - fTextLeft + s_fInputTextScroll,
+    s_iInputTextCursor = GetCursorPositionAtX(*_pText, v2MousePos.x - fTextLeft + s_fInputTextScroll,
       _oConfig.m_iFontSize);
     s_dInputTextBlinkStart = GetTime();
   }
