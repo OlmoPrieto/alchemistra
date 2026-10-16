@@ -22,11 +22,11 @@ public:
   static constexpr uint32 sm_uVirtualWindowHeight = sm_uWindowHeight  * sm_uRenderFactor;
 
   static constexpr uint32 sm_uElementPixelSize      = 32u;
-  static constexpr uint32 sm_uMaxHorizontalElements = 10u;
-  static constexpr uint32 sm_uMaxVerticalElements   = 8u;
-  static constexpr uint32 sm_uBackgroundWidth       = sm_uWindowWidth - sm_uElementPixelSize * 2u; // Two sprites empty on the sides
-  static constexpr uint32 sm_uBackgroundHeight      = sm_uWindowHeight - sm_uElementPixelSize * 5u - sm_uElementPixelSize * 3u;
-  static constexpr uint32 sm_uBackgroundXPos        = sm_uElementPixelSize;
+  static constexpr uint32 sm_uMaxHorizontalElements = 8u;
+  static constexpr uint32 sm_uMaxVerticalElements   = 6u;
+  static constexpr uint32 sm_uBackgroundWidth       = sm_uElementPixelSize * sm_uMaxHorizontalElements;
+  static constexpr uint32 sm_uBackgroundHeight      = sm_uElementPixelSize * sm_uMaxVerticalElements + sm_uElementPixelSize * 5u;
+  static constexpr uint32 sm_uBackgroundXPos        = (sm_uWindowWidth - sm_uBackgroundWidth) / 2;
   static constexpr uint32 sm_uBackgroundYPos        = sm_uElementPixelSize * 3u;
   static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - sm_uElementPixelSize;
   static constexpr uint8  sm_uNumElements           = 16u;

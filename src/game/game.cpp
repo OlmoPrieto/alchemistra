@@ -141,7 +141,7 @@ void CGame::Update(float _fDt)
     {
       case EPendingElementsState::WEST:
       {
-        uElement0Column = (uint32)(((int32)oPendingElementsPos.first.x - 32) / 32);
+        uElement0Column = (uint32)(((int32)oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize);
         uElement1Column = uElement0Column + 1;
         uElement0 = m_oPendingElements.first;
         uElement1 = m_oPendingElements.second;
@@ -149,7 +149,7 @@ void CGame::Update(float _fDt)
       }
       case EPendingElementsState::NORTH:
       {
-        uElement0Column = (oPendingElementsPos.first.x - 32) / 32;
+        uElement0Column = (oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize;
         uElement1Column = uElement0Column;
         uElement0 = m_oPendingElements.second;
         uElement1 = m_oPendingElements.first;
@@ -157,7 +157,7 @@ void CGame::Update(float _fDt)
       }
       case EPendingElementsState::EAST:
       {
-        uElement0Column = (uint32)(((int32)oPendingElementsPos.second.x - 32) / 32);
+        uElement0Column = (uint32)(((int32)oPendingElementsPos.second.x - sm_uBackgroundXPos) / sm_uElementPixelSize);
         uElement1Column = uElement0Column + 1;
         uElement0 = m_oPendingElements.second;
         uElement1 = m_oPendingElements.first;
@@ -165,7 +165,7 @@ void CGame::Update(float _fDt)
       }
       case EPendingElementsState::SOUTH:
       {
-        uElement0Column = (oPendingElementsPos.first.x - 32) / 32;
+        uElement0Column = (oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize;
         uElement1Column = uElement0Column;
         uElement0 = m_oPendingElements.first;
         uElement1 = m_oPendingElements.second;
@@ -228,7 +228,10 @@ void CGame::Draw()
   
   // Draw background
   DrawTexture(*m_spBackground.get(), sm_uBackgroundXPos, sm_uBackgroundYPos, WHITE);
-  
+
+  int32 iLineHeight = sm_uBackgroundYPos + (sm_uBackgroundHeight - sm_uElementPixelSize * sm_uMaxVerticalElements);
+  DrawLine(sm_uBackgroundXPos, iLineHeight, sm_uBackgroundXPos + sm_uBackgroundWidth, iLineHeight, Color{ 100, 100, 100, 255 });
+
   // Draw placed elements
 #if 0
   for (uint32 i = 0; i < m_vctPlacedElements.size(); ++i)
@@ -244,7 +247,7 @@ void CGame::Draw()
       if (m_auPlacedElements[i][j] != 0u)
       {
         Texture2D* pTargetTexture = GetTextureByElement(m_auPlacedElements[i][j]);
-        const CVector2D v2ElementPos(32u + j * 32u, (sm_uBackgroundYPos + sm_uBackgroundHeight - 32u) - i * 32u);
+        const CVector2D v2ElementPos(sm_uBackgroundXPos + j * sm_uElementPixelSize, (sm_uBackgroundYPos + sm_uBackgroundHeight - sm_uElementPixelSize) - i * sm_uElementPixelSize);
         DrawTexture(*pTargetTexture, v2ElementPos.x, v2ElementPos.y, GetColorByElement(m_auPlacedElements[i][j]));
       }
     }
@@ -734,7 +737,7 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
   {
     case EPendingElementsState::WEST:
     {
-      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos * 2, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos + sm_uElementPixelSize, sm_uBackgroundXPos + sm_uBackgroundWidth - sm_uElementPixelSize);
       oPositions.first.x  = v2SnappedMousePos.x - 32.0f;
       oPositions.first.y  = sm_uPendingElementHeight;
       oPositions.second.x = v2SnappedMousePos.x;
@@ -743,7 +746,7 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
     }
     case EPendingElementsState::NORTH:
     {
-      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth - sm_uElementPixelSize);
       oPositions.first.x  = v2SnappedMousePos.x;
       oPositions.first.y  = sm_uPendingElementHeight - 32.0f;
       oPositions.second.x = v2SnappedMousePos.x;
@@ -752,8 +755,8 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
     }
     case EPendingElementsState::EAST:
     {
-      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uWindowWidth - sm_uBackgroundXPos * 2);
-      oPositions.first.x  = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos * 2, sm_uWindowWidth - sm_uBackgroundXPos);
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth - sm_uElementPixelSize);
+      oPositions.first.x  = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos + sm_uElementPixelSize, sm_uWindowWidth - sm_uBackgroundXPos);
       oPositions.first.y  = sm_uPendingElementHeight;
       oPositions.second.x = oPositions.first.x - 32.0f;
       oPositions.second.y = sm_uPendingElementHeight;
@@ -761,7 +764,7 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
     }
     case EPendingElementsState::SOUTH:
     {
-      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uWindowWidth - sm_uBackgroundXPos * 2);
+      v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth - sm_uElementPixelSize);
       oPositions.first.x  = v2SnappedMousePos.x;
       oPositions.first.y  = sm_uPendingElementHeight;
       oPositions.second.x = v2SnappedMousePos.x;
