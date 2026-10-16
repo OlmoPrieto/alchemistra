@@ -324,6 +324,28 @@ void CGame::Draw()
     SaveGame("saves/latest.txt");
   }
 
+  static std::string sLoadFileBuffer;
+  const CVector2D v2InputSize(250.0f, v2SaveButtonSize.y);
+  SUIInputTextConfig oLoadFileInputConfig = CInputText::GetDefaultConfig();
+  oLoadFileInputConfig.m_v2Size = v2InputSize;
+  if (CInputText(&sLoadFileBuffer, CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.5f, sm_uWindowHeight - v2SaveButtonSize.y * 3 + v2SaveButtonSize.y * 1.5f), oLoadFileInputConfig))
+  {
+
+  }
+  SUIButtonConfig oDeleteButtonConfig = CButton::GetDefaultConfig();
+  oDeleteButtonConfig.m_v2Size.x = 7.5f;
+  if (CButton("X", CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.6f - oDeleteButtonConfig.m_v2Size.x * 2.0f, sm_uWindowHeight - v2SaveButtonSize.y * 3 + v2SaveButtonSize.y * 1.5f), oDeleteButtonConfig))
+  {
+    sLoadFileBuffer.clear();
+  }
+  SUIButtonConfig oLoadButtonConfig = CButton::GetDefaultConfig();
+  oLoadButtonConfig.m_v2Size.x = 1.0f;
+  oLoadButtonConfig.m_iFontSize = 3.0f;
+  if (CButton("LOAD", CVector2D(sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, sm_uWindowHeight - v2SaveButtonSize.y * 3 + v2SaveButtonSize.y * 1.5f), oLoadButtonConfig))
+  {
+    LoadGame(sLoadFileBuffer);
+  }
+
   // --------------
   EndTextureMode();
 
@@ -549,6 +571,63 @@ void CGame::SaveCurrentState()
   m_oCurrentGameState.m_uPendingElement0 = m_oPendingElements.first;
   m_oCurrentGameState.m_uPendingElement1 = m_oPendingElements.second;
   memcpy(m_oCurrentGameState.m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+}
+
+// ------------------------
+
+void CGame::LoadGame(const std::string& _sPath)
+{
+  std::filesystem::path oPath(_sPath);
+  std::ifstream oFile(oPath);
+  if (oFile.is_open() == false)
+  {
+    assert(false);
+    return;
+  }
+
+  uint32 uSaveDataVersion = UINT32_MAX;
+  uint32 uMaxVerticalElements = UINT32_MAX;
+  uint32 uMaxHorizontalElements = UINT32_MAX;
+  uint32 uPreviousStatesSize = UINT32_MAX;
+  oFile >> uSaveDataVersion;        assert(uSaveDataVersion == sm_uSaveDataVersion);
+  oFile >> uMaxVerticalElements;    assert(uMaxVerticalElements == sm_uMaxVerticalElements);
+  oFile >> uMaxHorizontalElements;  assert(uMaxHorizontalElements == sm_uMaxHorizontalElements);
+  oFile >> uPreviousStatesSize;
+  m_vctPreviousStates.resize(uPreviousStatesSize);
+  for (uint32 i = 0; i < m_vctPreviousStates.size(); ++i)
+  {
+    uint32 uTmp = UINT32_MAX;
+    oFile >> uTmp;
+    m_vctPreviousStates[i].m_uPendingElementsState = (uint8)uTmp;
+    oFile >> uTmp;
+    m_vctPreviousStates[i].m_uPendingElement0 = (uint8)uTmp;
+    oFile >> uTmp;
+    m_vctPreviousStates[i].m_uPendingElement1 = (uint8)uTmp;
+    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+    {
+      for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
+      {
+        oFile >> uTmp;
+        m_vctPreviousStates[i].m_auPlacedElements[j][k] = (uint8)uTmp;
+      }
+    }
+  }
+
+  uint32 uTmp = UINT32_MAX;
+  oFile >> uTmp;
+  m_ePendingElementsState = (EPendingElementsState)uTmp;
+  oFile >> uTmp;
+  m_oPendingElements.first = (uint8)uTmp;
+  oFile >> uTmp;
+  m_oPendingElements.second = (uint8)uTmp;
+  for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+  {
+    for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
+    {
+      oFile >> uTmp;
+      m_auPlacedElements[j][k] = (uint8)uTmp;
+    }
+  }
 }
 
 // ------------------------

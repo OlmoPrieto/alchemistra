@@ -67,6 +67,7 @@ public:
   void PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizontalElements]);
   void SaveGame(const std::string& _sPath);
   void SaveCurrentState();
+  void LoadGame(const std::string& _sPath);
 
 private:
 
