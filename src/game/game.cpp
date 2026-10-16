@@ -67,6 +67,8 @@ CGame::~CGame()
     UnloadTexture(*m_spCircle.get());
   }
 
+  SaveBackup();
+
   if (m_bWantClose)
   {
     CloseWindow();
@@ -319,7 +321,7 @@ void CGame::Draw()
   const CVector2D v2SaveButtonSize = CButton::CalculateSize("SAVE");
   if (CButton("SAVE", CVector2D(sm_uWindowWidth * 0.5f - v2SaveButtonSize.x * 0.5f, sm_uWindowHeight - v2SaveButtonSize.y * 3)))
   {
-    SaveGame("saves/test.txt");
+    SaveGame("saves/latest.txt");
   }
 
   // --------------
@@ -691,6 +693,48 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
   }
 
   return oPositions;
+}
+
+// ------------------------
+
+void CGame::SaveBackup()
+{
+  uint8 uCurrentBackup = 0;
+  char sBuffer[128] = { '\0' };
+  for (; uCurrentBackup < sm_uMaxBackups; ++uCurrentBackup)
+  {
+    sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uCurrentBackup);
+    if (std::filesystem::exists(sBuffer) == false)
+    {
+      break;
+    }
+  }
+  
+  if (uCurrentBackup < sm_uMaxBackups)
+  {
+    SaveGame(sBuffer);
+  }
+  else
+  {
+    // Need to overwrite the oldest one
+    std::filesystem::file_time_type oCurrentTime = std::filesystem::file_time_type::clock::now();
+    std::filesystem::file_time_type oOldestTime = oCurrentTime;
+    uCurrentBackup = 0;
+    uint8 uTargetBackup = 0;
+    for (; uCurrentBackup < sm_uMaxBackups; ++uCurrentBackup)
+    {
+      sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uCurrentBackup);
+      std::filesystem::file_time_type oTime = std::filesystem::last_write_time(sBuffer);
+      if (oTime < oOldestTime)
+      {
+        oOldestTime = oTime;
+        uTargetBackup = uCurrentBackup;
+      }
+    }
+
+    sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uTargetBackup);
+    SaveGame(sBuffer);
+  }
 }
 
 // ------------------------

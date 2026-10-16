@@ -32,6 +32,9 @@ public:
   static constexpr uint8  sm_uNumElements           = 16u;
   static constexpr uint8  sm_uSaveDataVersion       = 0u;
 
+  static constexpr const char* sm_sBackupsPath      = "saves/backups/";
+  static constexpr uint8 sm_uMaxBackups             = 4u;
+
   static CGame& GetInstance()
   {
     static CGame oInstance;
@@ -93,6 +96,7 @@ private:
   Color GetColorByElement(uint8 _uType);
   std::pair<uint8, uint8> GetRandomPendingElements();
   std::pair<CVector2D, CVector2D> GetPendingElementsPosition();
+  void SaveBackup();
 
   //std::vector<uint8[3 + sm_uMaxVerticalElements * sm_uMaxHorizontalElements]> m_vctPreviousStates;
   std::vector<SGameState> m_vctPreviousStates;
