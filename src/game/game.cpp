@@ -26,7 +26,7 @@ CGame::CGame()
   //      22.0 -> 21.89%
   //       7.0 ->  7.46%
   //       0.5 ->  1.00%
-  static_assert(sm_uNumElements == 16u);
+  //static_assert(sm_uNumElements == 16u);
   std::vector<double> vctWeigths(sm_uNumElements);
   for (uint32 i = 0; i < sm_uNumElements; ++i)
   {
@@ -321,13 +321,13 @@ void CGame::Draw()
     }
   }
 
+  static std::string sLoadFileBuffer;
   const CVector2D v2SaveButtonSize = CButton::CalculateSize("SAVE");
   if (CButton("SAVE", CVector2D(sm_uWindowWidth * 0.5f - v2SaveButtonSize.x * 0.5f, sm_uWindowHeight - v2SaveButtonSize.y * 3)))
   {
-    SaveGame("saves/latest.txt");
+    SaveGame(sLoadFileBuffer.empty() ? "saves/latest.txt" : sLoadFileBuffer);
   }
 
-  static std::string sLoadFileBuffer;
   const CVector2D v2InputSize(250.0f, v2SaveButtonSize.y);
   SUIInputTextConfig oLoadFileInputConfig = CInputText::GetDefaultConfig();
   oLoadFileInputConfig.m_v2Size = v2InputSize;

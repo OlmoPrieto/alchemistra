@@ -29,7 +29,7 @@ public:
   static constexpr uint32 sm_uBackgroundXPos        = (sm_uWindowWidth - sm_uBackgroundWidth) / 2;
   static constexpr uint32 sm_uBackgroundYPos        = sm_uElementPixelSize * 3u;
   static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - sm_uElementPixelSize;
-  static constexpr uint8  sm_uNumElements           = 16u;
+  static constexpr uint8  sm_uNumElements           = 12u;
   static constexpr uint8  sm_uSaveDataVersion       = 0u;
 
   static constexpr const char* sm_sBackupsPath      = "saves/backups/";
