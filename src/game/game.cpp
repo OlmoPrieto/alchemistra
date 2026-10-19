@@ -233,13 +233,6 @@ void CGame::Draw()
   DrawLine(sm_uBackgroundXPos, iLineHeight, sm_uBackgroundXPos + sm_uBackgroundWidth, iLineHeight, Color{ 100, 100, 100, 255 });
 
   // Draw placed elements
-#if 0
-  for (uint32 i = 0; i < m_vctPlacedElements.size(); ++i)
-  {
-    Texture2D* pTargetTexture = GetTextureByElement(m_vctPlacedElements[i].second);
-    DrawTexture(*pTargetTexture, m_vctPlacedElements[i].first.x, m_vctPlacedElements[i].first.y, WHITE);
-  }
-#else
   for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
   {
     for (uint32 j = 0; j < sm_uMaxHorizontalElements; ++j)
@@ -252,7 +245,6 @@ void CGame::Draw()
       }
     }
   }
-#endif
 
   // Draw pending elements
   std::pair<CVector2D, CVector2D> oPendingElementsPos = GetPendingElementsPosition();
@@ -275,7 +267,8 @@ void CGame::Draw()
     oPendingElementsPos.second.y,
     GetColorByElement(m_oPendingElements.second));
 
-  // UI
+  // -------- UI -------- 
+
   if (CButton("Prev.", CVector2D()))
   {
     if (m_uCurrentGameState == UINT32_MAX)
@@ -322,29 +315,30 @@ void CGame::Draw()
   }
 
   static std::string sLoadFileBuffer;
-  const CVector2D v2SaveButtonSize = CButton::CalculateSize("SAVE");
-  if (CButton("SAVE", CVector2D(sm_uWindowWidth * 0.5f - v2SaveButtonSize.x * 0.5f, sm_uWindowHeight - v2SaveButtonSize.y * 3)))
+  SUIButtonConfig oSaveButtonConfig = CButton::GetDefaultConfig();
+  oSaveButtonConfig.m_v2Size.x = 10.0f;
+  if (CButton("SAVE", CVector2D(sm_uWindowWidth * 0.5f - CButton::GetDefaultConfig().m_v2Size.x * 0.25f, 0.0f), oSaveButtonConfig))
   {
     SaveGame(sLoadFileBuffer.empty() ? "saves/latest.txt" : sLoadFileBuffer);
   }
 
-  const CVector2D v2InputSize(250.0f, v2SaveButtonSize.y);
+  const CVector2D v2InputSize(250.0f, 36.0f);
   SUIInputTextConfig oLoadFileInputConfig = CInputText::GetDefaultConfig();
   oLoadFileInputConfig.m_v2Size = v2InputSize;
-  if (CInputText(&sLoadFileBuffer, CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.5f, sm_uWindowHeight - v2SaveButtonSize.y * 3 + v2SaveButtonSize.y * 1.5f), oLoadFileInputConfig))
+  if (CInputText(&sLoadFileBuffer, CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.5f, sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadFileInputConfig))
   {
 
   }
   SUIButtonConfig oDeleteButtonConfig = CButton::GetDefaultConfig();
   oDeleteButtonConfig.m_v2Size.x = 7.5f;
-  if (CButton("X", CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.6f - oDeleteButtonConfig.m_v2Size.x * 2.0f, sm_uWindowHeight - v2SaveButtonSize.y * 3 + v2SaveButtonSize.y * 1.5f), oDeleteButtonConfig))
+  if (CButton("X", CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.6f - oDeleteButtonConfig.m_v2Size.x * 2.0f, sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oDeleteButtonConfig))
   {
     sLoadFileBuffer.clear();
   }
   SUIButtonConfig oLoadButtonConfig = CButton::GetDefaultConfig();
   oLoadButtonConfig.m_v2Size.x = 1.0f;
   oLoadButtonConfig.m_iFontSize = 3.0f;
-  if (CButton("LOAD", CVector2D(sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, sm_uWindowHeight - v2SaveButtonSize.y * 3 + v2SaveButtonSize.y * 1.5f), oLoadButtonConfig))
+  if (CButton("LOAD", CVector2D(sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadButtonConfig))
   {
     LoadGame(sLoadFileBuffer);
   }
@@ -405,6 +399,7 @@ bool CGame::CheckAndMerge()
         if (uOccurrence >= 3u)
         {
           // Merge
+          ++m_auCombinations[m_auPlacedElements[i][j] - 1];
           m_auPlacedElements[i][j] += 1u;
           for (uint32 l = j + 1; l < k; ++l)
           {
@@ -445,6 +440,7 @@ bool CGame::CheckAndMerge()
         if (uOccurrence >= 3u)
         {
           // Merge
+          ++m_auCombinations[m_auPlacedElements[j][i] - 1];
           m_auPlacedElements[j][i] += 1u;
           for (uint32 l = j + 1; l < k; ++l)
           {
@@ -817,6 +813,55 @@ void CGame::SaveBackup()
     sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uTargetBackup);
     SaveGame(sBuffer);
   }
+}
+
+// ------------------------
+
+void CGame::DrawCombinedElements()
+{
+  DrawTexture(*m_spTriangle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(1));
+  DrawTexture(*m_spSquare.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(2));
+  DrawTexture(*m_spPentagon.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(3));
+  DrawTexture(*m_spCircle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(4));
+
+  DrawTexture(*m_spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(5));
+  DrawTexture(*m_spSquare.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(6));
+  DrawTexture(*m_spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(7));
+  DrawTexture(*m_spCircle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(8));
+
+  DrawTexture(*m_spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(9));
+  DrawTexture(*m_spSquare.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(10));
+  DrawTexture(*m_spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(11));
+  DrawTexture(*m_spCircle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(12));
+
+  char sScoreBuffer[8] = { '\0' };
+
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[0]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 1.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 0.3f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[1]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 1.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.55f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[2]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 1.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.80f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[3]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 1.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 4.05f, GetFontDefault().baseSize * 2, WHITE);
+
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[4]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 4.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 0.3f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[5]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 4.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.55f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[6]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 4.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.80f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[7]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 4.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 4.05f, GetFontDefault().baseSize * 2, WHITE);
+
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[8]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 7.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 0.3f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[9]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 7.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.55f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[10]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 7.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.80f, GetFontDefault().baseSize * 2, WHITE);
+  sprintf(sScoreBuffer, "x %u", m_auCombinations[11]);
+  DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 7.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 4.05f, GetFontDefault().baseSize * 2, WHITE);
 }
 
 // ------------------------

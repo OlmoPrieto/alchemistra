@@ -98,6 +98,7 @@ private:
   std::pair<uint8, uint8> GetRandomPendingElements();
   std::pair<CVector2D, CVector2D> GetPendingElementsPosition();
   void SaveBackup();
+  void DrawCombinedElements();
 
   //std::vector<uint8[3 + sm_uMaxVerticalElements * sm_uMaxHorizontalElements]> m_vctPreviousStates;
   std::vector<SGameState> m_vctPreviousStates;
@@ -107,6 +108,7 @@ private:
 
   // TODO: probably will need to add +2 to vertical, in case you have elements atop and try to dump 2 vertical one (need to represent them but the game will be over)
   uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0u };
+  uint32 m_auCombinations[sm_uNumElements] = { 0u };  // Will store how many combinations of each element the player has made throughout a game
   std::pair<uint8, uint8> m_oPendingElements;
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spBackground;
