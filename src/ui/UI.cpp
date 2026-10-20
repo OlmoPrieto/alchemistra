@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "game/game.h"
+#include "game/game_manager.h"
 
 namespace
 {
@@ -38,8 +38,8 @@ namespace
       return EUIElementState::DISABLED;
 
     Vector2 v2MousePos = GetMousePosition();
-    v2MousePos.x /= CGame::sm_uRenderFactor;
-    v2MousePos.y /= CGame::sm_uRenderFactor;
+    v2MousePos.x /= CGameManager::sm_uRenderFactor;
+    v2MousePos.y /= CGameManager::sm_uRenderFactor;
     if (!CheckCollisionPointRec(v2MousePos, _oBounds))
       return EUIElementState::NORMAL;
 
@@ -174,8 +174,8 @@ void CButton::Draw(const char* _pText, const CVector2D& _v2Position, const SUIBu
   const Rectangle oBounds = ToRectangle(_v2Position, v2Size);
   m_eState = GetElementState(oBounds, _oConfig.m_bEnabled);
   Vector2 v2MousePos = GetMousePosition();
-  v2MousePos.x /= CGame::sm_uRenderFactor;
-  v2MousePos.y /= CGame::sm_uRenderFactor;
+  v2MousePos.x /= CGameManager::sm_uRenderFactor;
+  v2MousePos.y /= CGameManager::sm_uRenderFactor;
   m_bPressed = _oConfig.m_bEnabled && CheckCollisionPointRec(v2MousePos, oBounds) &&
     IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 
@@ -226,8 +226,8 @@ void CCheckbox::Draw(const char* _pText, bool* _pbValue, const CVector2D& _v2Pos
   const bool bEnabled = _oConfig.m_bEnabled && _pbValue;
   m_eState = GetElementState(oInteractionBounds, bEnabled);
   Vector2 v2MousePos = GetMousePosition();
-  v2MousePos.x /= CGame::sm_uRenderFactor;
-  v2MousePos.y /= CGame::sm_uRenderFactor;
+  v2MousePos.x /= CGameManager::sm_uRenderFactor;
+  v2MousePos.y /= CGameManager::sm_uRenderFactor;
   m_bChanged = bEnabled && CheckCollisionPointRec(v2MousePos, oInteractionBounds) &&
     IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
   if (m_bChanged)
@@ -287,8 +287,8 @@ void CInputText::Draw(std::string* _pText, const CVector2D& _v2Position, const S
   const bool bEnabled = _oConfig.m_bEnabled && _pText;
   m_eState = GetElementState(oBounds, bEnabled);
   Vector2 v2MousePos = GetMousePosition();
-  v2MousePos.x /= CGame::sm_uRenderFactor;
-  v2MousePos.y /= CGame::sm_uRenderFactor;
+  v2MousePos.x /= CGameManager::sm_uRenderFactor;
+  v2MousePos.y /= CGameManager::sm_uRenderFactor;
   const bool bClicked = bEnabled && CheckCollisionPointRec(v2MousePos, oBounds) &&
     IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 

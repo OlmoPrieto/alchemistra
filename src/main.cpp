@@ -2,7 +2,7 @@
 #include <cassert>
 #include <filesystem>
 
-#include "game/game.h"
+#include "game/game_manager.h"
 
 int main(int argc, char** argv)
 {
@@ -27,14 +27,15 @@ int main(int argc, char** argv)
   }
   std::filesystem::current_path(oCurrentPath);
 
-  CGame& oGame = CGame::GetInstance();
-  oGame.Init();
+  CGameManager& oGameManager = CGameManager::GetInstance();
+  oGameManager.Init();
 
-  while (oGame.WantClose() == false)
+  while (oGameManager.WantClose() == false)
   {
-    oGame.Update(0.0166666f);
-    oGame.Draw();
+    oGameManager.Loop();
   }
+
+  oGameManager.Destroy();
 
   return 0;
 }

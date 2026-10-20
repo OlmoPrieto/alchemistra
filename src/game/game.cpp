@@ -1,4 +1,5 @@
 #include "game/game.h"
+#include "game/game_manager.h"
 
 #include <random>
 #include <chrono>
@@ -7,9 +8,6 @@
 #include <filesystem>
 
 #include "ui/ui.h"
-
-// ------------------------------------------------
-// ------------------------------------------------
 
 // ------------------------
 
@@ -50,50 +48,16 @@ CGame::~CGame()
   {
     UnloadTexture(*m_spBackground.get());
   }
-  if (m_spTriangle && m_spTriangle.use_count() == 0)
-  {
-    UnloadTexture(*m_spTriangle.get());
-  }
-  if (m_spSquare && m_spSquare.use_count() == 0)
-  {
-    UnloadTexture(*m_spSquare.get());
-  }
-  if (m_spPentagon && m_spPentagon.use_count() == 0)
-  {
-    UnloadTexture(*m_spPentagon.get());
-  }
-  if (m_spCircle && m_spCircle.use_count() == 0)
-  {
-    UnloadTexture(*m_spCircle.get());
-  }
-
-  SaveBackup();
-
-  if (m_bWantClose)
-  {
-    CloseWindow();
-  }
 }
 
 // ------------------------
 
 void CGame::Init()
 {
-  InitWindow(sm_uVirtualWindowWidth, sm_uVirtualWindowHeight, "alchemistra");
-  SetTargetFPS(60);
-
-  m_oRenderTarget = LoadRenderTexture(sm_uWindowWidth, sm_uWindowHeight);
-  SetTextureFilter(m_oRenderTarget.texture, TEXTURE_FILTER_POINT);
-
-  //Image oWhiteImage = GenImageColor(sm_uWindowWidth - 64u, sm_uWindowHeight * 0.5f, Color{200, 200, 200, 255});
-  Image oWhiteImage = GenImageColor(sm_uBackgroundWidth, sm_uBackgroundHeight, Color{200, 200, 200, 255});
+  //Image oWhiteImage = GenImageColor(CGameManager::sm_uWindowWidth - 64u, CGameManager::sm_uWindowHeight * 0.5f, Color{200, 200, 200, 255});
+  Image oWhiteImage = GenImageColor(CGame::sm_uBackgroundWidth, CGame::sm_uBackgroundHeight, Color{ 200, 200, 200, 255 });
   m_spBackground = std::make_shared<Texture2D>(LoadTextureFromImage(oWhiteImage));
   UnloadImage(oWhiteImage);
-
-  m_spTriangle = std::make_shared<Texture2D>(LoadTexture("assets/triangle.png"));
-  m_spSquare   = std::make_shared<Texture2D>(LoadTexture("assets/square.png"));
-  m_spPentagon = std::make_shared<Texture2D>(LoadTexture("assets/pentagon.png"));
-  m_spCircle   = std::make_shared<Texture2D>(LoadTexture("assets/circle.png"));
 
   //m_oPendingElements = { 1, 5};
   m_oPendingElements = GetRandomPendingElements();
@@ -103,18 +67,16 @@ void CGame::Init()
 
 void CGame::Update(float _fDt)
 {
-  m_bWantClose = IsKeyPressed(KEY_ESCAPE);
-
   if (IsKeyPressed(KEY_R))
   {
     memset(m_auPlacedElements, 0, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
   }
 
-  const CVector2D v2MousePos = GetMousePos();
-  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && 
+  const CVector2D v2MousePos = CGameManager::GetInstance().GetMousePos();
+  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
     v2MousePos.x >= sm_uBackgroundXPos && v2MousePos.x <= sm_uBackgroundXPos + sm_uBackgroundWidth &&
     v2MousePos.y >= sm_uBackgroundYPos && v2MousePos.y <= sm_uBackgroundYPos + sm_uBackgroundHeight
-  )
+    )
   {
     // Save state first
     printf("Saving game state %u\n", (uint32)m_vctPreviousStates.size());
@@ -139,38 +101,38 @@ void CGame::Update(float _fDt)
     uint8 uElement1 = 0xff;
     switch (m_ePendingElementsState)
     {
-      case EPendingElementsState::WEST:
-      {
-        uElement0Column = (uint32)(((int32)oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize);
-        uElement1Column = uElement0Column + 1;
-        uElement0 = m_oPendingElements.first;
-        uElement1 = m_oPendingElements.second;
-        break;
-      }
-      case EPendingElementsState::NORTH:
-      {
-        uElement0Column = (oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize;
-        uElement1Column = uElement0Column;
-        uElement0 = m_oPendingElements.second;
-        uElement1 = m_oPendingElements.first;
-        break;
-      }
-      case EPendingElementsState::EAST:
-      {
-        uElement0Column = (uint32)(((int32)oPendingElementsPos.second.x - sm_uBackgroundXPos) / sm_uElementPixelSize);
-        uElement1Column = uElement0Column + 1;
-        uElement0 = m_oPendingElements.second;
-        uElement1 = m_oPendingElements.first;
-        break;
-      }
-      case EPendingElementsState::SOUTH:
-      {
-        uElement0Column = (oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize;
-        uElement1Column = uElement0Column;
-        uElement0 = m_oPendingElements.first;
-        uElement1 = m_oPendingElements.second;
-        break;
-      }
+    case EPendingElementsState::WEST:
+    {
+      uElement0Column = (uint32)(((int32)oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize);
+      uElement1Column = uElement0Column + 1;
+      uElement0 = m_oPendingElements.first;
+      uElement1 = m_oPendingElements.second;
+      break;
+    }
+    case EPendingElementsState::NORTH:
+    {
+      uElement0Column = (oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize;
+      uElement1Column = uElement0Column;
+      uElement0 = m_oPendingElements.second;
+      uElement1 = m_oPendingElements.first;
+      break;
+    }
+    case EPendingElementsState::EAST:
+    {
+      uElement0Column = (uint32)(((int32)oPendingElementsPos.second.x - sm_uBackgroundXPos) / sm_uElementPixelSize);
+      uElement1Column = uElement0Column + 1;
+      uElement0 = m_oPendingElements.second;
+      uElement1 = m_oPendingElements.first;
+      break;
+    }
+    case EPendingElementsState::SOUTH:
+    {
+      uElement0Column = (oPendingElementsPos.first.x - sm_uBackgroundXPos) / sm_uElementPixelSize;
+      uElement1Column = uElement0Column;
+      uElement0 = m_oPendingElements.first;
+      uElement1 = m_oPendingElements.second;
+      break;
+    }
     }
 
     printf("Dropping on: ");
@@ -187,7 +149,7 @@ void CGame::Update(float _fDt)
           break;
         }
       }
-    
+
       for (uint32 i = 0; i < sm_uMaxVerticalElements; ++i)
       {
         if (m_auPlacedElements[i][uElement1Column] == 0)
@@ -222,10 +184,8 @@ void CGame::Update(float _fDt)
 
 void CGame::Draw()
 {
-  BeginTextureMode(m_oRenderTarget);
-  ClearBackground(BLACK);
-  // --------------
-  
+  assert(IsWindowReady());
+
   // Draw background
   DrawTexture(*m_spBackground.get(), sm_uBackgroundXPos, sm_uBackgroundYPos, WHITE);
 
@@ -239,30 +199,22 @@ void CGame::Draw()
     {
       if (m_auPlacedElements[i][j] != 0u)
       {
-        Texture2D* pTargetTexture = GetTextureByElement(m_auPlacedElements[i][j]);
+        std::shared_ptr<Texture2D> spTargetTexture = CGameManager::GetInstance().GetTextureByElement(m_auPlacedElements[i][j]);
         const CVector2D v2ElementPos(sm_uBackgroundXPos + j * sm_uElementPixelSize, (sm_uBackgroundYPos + sm_uBackgroundHeight - sm_uElementPixelSize) - i * sm_uElementPixelSize);
-        DrawTexture(*pTargetTexture, v2ElementPos.x, v2ElementPos.y, GetColorByElement(m_auPlacedElements[i][j]));
+        DrawTexture(*spTargetTexture.get(), v2ElementPos.x, v2ElementPos.y, GetColorByElement(m_auPlacedElements[i][j]));
       }
     }
   }
 
   // Draw pending elements
   std::pair<CVector2D, CVector2D> oPendingElementsPos = GetPendingElementsPosition();
-  Texture2D* pTargetTexture = GetTextureByElement(m_oPendingElements.first);
-  /*DrawTexture(*pTargetTexture, 
-    Clamp(oPendingElementsPos.first.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth), 
-    oPendingElementsPos.first.y, 
-    GetColorByElement(m_oPendingElements.first));*/
-  DrawTexture(*pTargetTexture,
+  std::shared_ptr<Texture2D> spTargetTexture = CGameManager::GetInstance().GetTextureByElement(m_oPendingElements.first);
+  DrawTexture(*spTargetTexture.get(),
     oPendingElementsPos.first.x,
     oPendingElementsPos.first.y,
     GetColorByElement(m_oPendingElements.first));
-  pTargetTexture = GetTextureByElement(m_oPendingElements.second);
-  /*DrawTexture(*pTargetTexture, 
-    Clamp(oPendingElementsPos.second.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth),
-    oPendingElementsPos.second.y, 
-    GetColorByElement(m_oPendingElements.second));*/
-  DrawTexture(*pTargetTexture,
+  spTargetTexture = CGameManager::GetInstance().GetTextureByElement(m_oPendingElements.second);
+  DrawTexture(*spTargetTexture.get(),
     oPendingElementsPos.second.x,
     oPendingElementsPos.second.y,
     GetColorByElement(m_oPendingElements.second));
@@ -273,7 +225,7 @@ void CGame::Draw()
   {
     if (m_uCurrentGameState == UINT32_MAX)
     {
-      SaveCurrentState();
+      CGameManager::GetInstance().SaveCurrentState();
       m_uCurrentGameState = m_vctPreviousStates.size();
     }
 
@@ -287,7 +239,7 @@ void CGame::Draw()
     m_uPreviousGameState = Clamp((int32)m_uPreviousGameState - 1, 0, m_vctPreviousStates.size());
   }
   const CVector2D v2NextButtonSize = CButton::CalculateSize("Next");
-  if (CButton("Next", CVector2D(sm_uWindowWidth - v2NextButtonSize.x, 0.0f)))
+  if (CButton("Next", CVector2D(CGameManager::sm_uWindowWidth - v2NextButtonSize.x, 0.0f)))
   {
     if (m_uPreviousGameState < m_vctPreviousStates.size() - 1)
     {
@@ -317,53 +269,31 @@ void CGame::Draw()
   static std::string sLoadFileBuffer;
   SUIButtonConfig oSaveButtonConfig = CButton::GetDefaultConfig();
   oSaveButtonConfig.m_v2Size.x = 10.0f;
-  if (CButton("SAVE", CVector2D(sm_uWindowWidth * 0.5f - CButton::GetDefaultConfig().m_v2Size.x * 0.25f, 0.0f), oSaveButtonConfig))
+  if (CButton("SAVE", CVector2D(CGameManager::sm_uWindowWidth * 0.5f - CButton::GetDefaultConfig().m_v2Size.x * 0.25f, 0.0f), oSaveButtonConfig))
   {
-    SaveGame(sLoadFileBuffer.empty() ? "saves/latest.txt" : sLoadFileBuffer);
+    CGameManager::GetInstance().SaveGame(sLoadFileBuffer.empty() ? "saves/latest.txt" : sLoadFileBuffer);
   }
 
   const CVector2D v2InputSize(250.0f, 36.0f);
   SUIInputTextConfig oLoadFileInputConfig = CInputText::GetDefaultConfig();
   oLoadFileInputConfig.m_v2Size = v2InputSize;
-  if (CInputText(&sLoadFileBuffer, CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.5f, sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadFileInputConfig))
+  if (CInputText(&sLoadFileBuffer, CVector2D(CGameManager::sm_uWindowWidth * 0.5f - v2InputSize.x * 0.5f, CGameManager::sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadFileInputConfig))
   {
 
   }
   SUIButtonConfig oDeleteButtonConfig = CButton::GetDefaultConfig();
   oDeleteButtonConfig.m_v2Size.x = 7.5f;
-  if (CButton("X", CVector2D(sm_uWindowWidth * 0.5f - v2InputSize.x * 0.6f - oDeleteButtonConfig.m_v2Size.x * 2.0f, sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oDeleteButtonConfig))
+  if (CButton("X", CVector2D(CGameManager::sm_uWindowWidth * 0.5f - v2InputSize.x * 0.6f - oDeleteButtonConfig.m_v2Size.x * 2.0f, CGameManager::sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oDeleteButtonConfig))
   {
     sLoadFileBuffer.clear();
   }
   SUIButtonConfig oLoadButtonConfig = CButton::GetDefaultConfig();
   oLoadButtonConfig.m_v2Size.x = 1.0f;
   oLoadButtonConfig.m_iFontSize = 3.0f;
-  if (CButton("LOAD", CVector2D(sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadButtonConfig))
+  if (CButton("LOAD", CVector2D(CGameManager::sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, CGameManager::sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadButtonConfig))
   {
-    LoadGame(sLoadFileBuffer);
+    CGameManager::GetInstance().LoadGame(sLoadFileBuffer);
   }
-
-  // --------------
-  EndTextureMode();
-
-  // -------- END    REGULAR  DRAWING     --------
-  // -------- BEGIN RENDER TARGET DRAWING --------
-
-  BeginDrawing();
-  ClearBackground(BLACK);
-  // --------------
-
-  // Flip texture on Y axis (raylib draws render textures inverted by default)
-  Rectangle oSourceRect = { 0.0f, 0.0f, (float)m_oRenderTarget.texture.width, -(float)m_oRenderTarget.texture.height };
-
-  // DestRect size will be the total size of the current physical window
-  Rectangle oDestRect = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
-
-  // Draw virtual canvas stretching perfectly in the big window
-  DrawTexturePro(m_oRenderTarget.texture, oSourceRect, oDestRect, Vector2{ 0.0f, 0.0f }, 0.0f, WHITE);
-
-  // --------------
-  EndDrawing();
 }
 
 // ------------------------
@@ -516,164 +446,6 @@ void CGame::PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizo
 
 // ------------------------
 
-void CGame::SaveGame(const std::string& _sPath)
-{
-  std::filesystem::path oPath(_sPath);
-  std::ofstream oFile(oPath);
-  if (oFile.is_open() == false)
-  {
-    assert(false);
-    return;
-  }
-
-  oFile << (uint32)sm_uSaveDataVersion << "\n";
-  oFile << (uint32)sm_uMaxVerticalElements << "\n";
-  oFile << (uint32)sm_uMaxHorizontalElements << "\n";
-  oFile << (uint32)m_vctPreviousStates.size() << "\n";
-  for (uint32 i = 0; i < m_vctPreviousStates.size(); ++i)
-  {
-    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElementsState << "\n";
-    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElement0 << "\n";
-    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElement1 << "\n";
-    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
-    {
-      for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
-      {
-        oFile << (uint32)m_vctPreviousStates[i].m_auPlacedElements[j][k] << " ";
-      }
-      oFile << "\n";
-    }
-    oFile << "\n";
-  }
-
-  SaveCurrentState();
-  oFile << (uint32)m_oCurrentGameState.m_uPendingElementsState << "\n";
-  oFile << (uint32)m_oCurrentGameState.m_uPendingElement0 << "\n";
-  oFile << (uint32)m_oCurrentGameState.m_uPendingElement1 << "\n";
-  for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
-  {
-    for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
-    {
-      oFile << (uint32)m_oCurrentGameState.m_auPlacedElements[j][k] << " ";
-    }
-    oFile << "\n";
-  }
-
-  printf("File saved on [%s]\n", _sPath.c_str());
-}
-
-// ------------------------
-
-void CGame::SaveCurrentState()
-{
-  m_oCurrentGameState.m_uPendingElementsState = (uint8)m_ePendingElementsState;
-  m_oCurrentGameState.m_uPendingElement0 = m_oPendingElements.first;
-  m_oCurrentGameState.m_uPendingElement1 = m_oPendingElements.second;
-  memcpy(m_oCurrentGameState.m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
-}
-
-// ------------------------
-
-void CGame::LoadGame(const std::string& _sPath)
-{
-  std::filesystem::path oPath(_sPath);
-  std::ifstream oFile(oPath);
-  if (oFile.is_open() == false)
-  {
-    assert(false);
-    return;
-  }
-
-  uint32 uSaveDataVersion = UINT32_MAX;
-  uint32 uMaxVerticalElements = UINT32_MAX;
-  uint32 uMaxHorizontalElements = UINT32_MAX;
-  uint32 uPreviousStatesSize = UINT32_MAX;
-  oFile >> uSaveDataVersion;        assert(uSaveDataVersion == sm_uSaveDataVersion);
-  oFile >> uMaxVerticalElements;    assert(uMaxVerticalElements == sm_uMaxVerticalElements);
-  oFile >> uMaxHorizontalElements;  assert(uMaxHorizontalElements == sm_uMaxHorizontalElements);
-  oFile >> uPreviousStatesSize;
-  m_vctPreviousStates.resize(uPreviousStatesSize);
-  for (uint32 i = 0; i < m_vctPreviousStates.size(); ++i)
-  {
-    uint32 uTmp = UINT32_MAX;
-    oFile >> uTmp;
-    m_vctPreviousStates[i].m_uPendingElementsState = (uint8)uTmp;
-    oFile >> uTmp;
-    m_vctPreviousStates[i].m_uPendingElement0 = (uint8)uTmp;
-    oFile >> uTmp;
-    m_vctPreviousStates[i].m_uPendingElement1 = (uint8)uTmp;
-    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
-    {
-      for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
-      {
-        oFile >> uTmp;
-        m_vctPreviousStates[i].m_auPlacedElements[j][k] = (uint8)uTmp;
-      }
-    }
-  }
-
-  uint32 uTmp = UINT32_MAX;
-  oFile >> uTmp;
-  m_ePendingElementsState = (EPendingElementsState)uTmp;
-  oFile >> uTmp;
-  m_oPendingElements.first = (uint8)uTmp;
-  oFile >> uTmp;
-  m_oPendingElements.second = (uint8)uTmp;
-  for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
-  {
-    for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
-    {
-      oFile >> uTmp;
-      m_auPlacedElements[j][k] = (uint8)uTmp;
-    }
-  }
-}
-
-// ------------------------
-
-Texture2D* CGame::GetTextureByElement(uint8 _uType)
-{
-  switch (_uType)
-  {
-    case 1:
-    case 5:
-    case 9:
-    case 13:
-    {
-      return m_spTriangle.get();
-    }
-    case 2:
-    case 6:
-    case 10:
-    case 14:
-    {
-      return m_spSquare.get();
-    }
-    case 3:
-    case 7:
-    case 11:
-    case 15:
-    {
-      return m_spPentagon.get();
-    }
-    case 4:
-    case 8:
-    case 12:
-    case 16:
-    {
-      return m_spCircle.get();
-    }
-    default:
-    {
-
-    }
-  }
-
-  return nullptr;
-}
-
-// ------------------------
-
 Color CGame::GetColorByElement(uint8 _uType)
 {
   switch (_uType)
@@ -727,7 +499,7 @@ std::pair<uint8, uint8> CGame::GetRandomPendingElements()
 std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
 {
   std::pair<CVector2D, CVector2D> oPositions;
-  CVector2D v2SnappedMousePos = GetMousePosSnappedToBackground();
+  CVector2D v2SnappedMousePos = CGameManager::GetInstance().GetMousePosSnappedToBackground();
   // Dont allow X leftmost and rightmost pos to exceed the background (which is aligned to sm_uBackgroundXPos)
   switch (m_ePendingElementsState)
   {
@@ -752,7 +524,7 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
     case EPendingElementsState::EAST:
     {
       v2SnappedMousePos.x = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos, sm_uBackgroundXPos + sm_uBackgroundWidth - sm_uElementPixelSize);
-      oPositions.first.x  = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos + sm_uElementPixelSize, sm_uWindowWidth - sm_uBackgroundXPos);
+      oPositions.first.x  = Clamp(v2SnappedMousePos.x, sm_uBackgroundXPos + sm_uElementPixelSize, CGameManager::sm_uWindowWidth - sm_uBackgroundXPos);
       oPositions.first.y  = sm_uPendingElementHeight;
       oPositions.second.x = oPositions.first.x - 32.0f;
       oPositions.second.y = sm_uPendingElementHeight;
@@ -775,64 +547,27 @@ std::pair<CVector2D, CVector2D> CGame::GetPendingElementsPosition()
 
 // ------------------------
 
-void CGame::SaveBackup()
-{
-  uint8 uCurrentBackup = 0;
-  char sBuffer[128] = { '\0' };
-  for (; uCurrentBackup < sm_uMaxBackups; ++uCurrentBackup)
-  {
-    sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uCurrentBackup);
-    if (std::filesystem::exists(sBuffer) == false)
-    {
-      break;
-    }
-  }
-  
-  if (uCurrentBackup < sm_uMaxBackups)
-  {
-    SaveGame(sBuffer);
-  }
-  else
-  {
-    // Need to overwrite the oldest one
-    std::filesystem::file_time_type oCurrentTime = std::filesystem::file_time_type::clock::now();
-    std::filesystem::file_time_type oOldestTime = oCurrentTime;
-    uCurrentBackup = 0;
-    uint8 uTargetBackup = 0;
-    for (; uCurrentBackup < sm_uMaxBackups; ++uCurrentBackup)
-    {
-      sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uCurrentBackup);
-      std::filesystem::file_time_type oTime = std::filesystem::last_write_time(sBuffer);
-      if (oTime < oOldestTime)
-      {
-        oOldestTime = oTime;
-        uTargetBackup = uCurrentBackup;
-      }
-    }
-
-    sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uTargetBackup);
-    SaveGame(sBuffer);
-  }
-}
-
-// ------------------------
-
 void CGame::DrawCombinedElements()
 {
-  DrawTexture(*m_spTriangle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(1));
-  DrawTexture(*m_spSquare.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(2));
-  DrawTexture(*m_spPentagon.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(3));
-  DrawTexture(*m_spCircle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(4));
+  std::shared_ptr<Texture2D> spTriangle = CGameManager::GetInstance().GetTextureByElement(0);
+  std::shared_ptr<Texture2D> spSquare   = CGameManager::GetInstance().GetTextureByElement(1);
+  std::shared_ptr<Texture2D> spPentagon = CGameManager::GetInstance().GetTextureByElement(2);
+  std::shared_ptr<Texture2D> spCircle   = CGameManager::GetInstance().GetTextureByElement(3);
 
-  DrawTexture(*m_spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(5));
-  DrawTexture(*m_spSquare.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(6));
-  DrawTexture(*m_spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(7));
-  DrawTexture(*m_spCircle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(8));
+  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(1));
+  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(2));
+  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(3));
+  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(4));
 
-  DrawTexture(*m_spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(9));
-  DrawTexture(*m_spSquare.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(10));
-  DrawTexture(*m_spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(11));
-  DrawTexture(*m_spCircle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(12));
+  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(5));
+  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(6));
+  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(7));
+  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(8));
+
+  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(9));
+  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(10));
+  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(11));
+  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(12));
 
   char sScoreBuffer[8] = { '\0' };
 
