@@ -23,6 +23,12 @@ public:
   static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - sm_uElementPixelSize;
   static constexpr uint8  sm_uNumElements           = 12u;
 
+  static constexpr uint8  sm_uSaveDataVersion = 0u;
+  static constexpr const char* sm_sBackupsPath = "saves/backups/";
+  static constexpr uint8 sm_uMaxBackups = 4u;
+
+  CGame();
+  ~CGame();
   CGame(const CGame&) = delete;
   void operator=(const CGame&) = delete;
 
@@ -30,14 +36,16 @@ public:
   void Update(float _fDt);
   void Draw();
 
+  void Start();
+
   bool CheckAndMerge();
   void ApplyPhysics(); // Tries to make floating elements occupy empty ones
 
   void PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizontalElements]);
 
+  bool GetGameStarted() const { return m_bStarted; }
+
 private:
-  
-  friend class CGameManager;
 
   // This will represent where the element on the left of the pending elements is
   enum class EPendingElementsState : uint8
@@ -57,14 +65,15 @@ private:
     uint8 m_uPendingElement1 = 0;
     uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0 };
   };
-  
-  CGame();
-  ~CGame();
 
   Color GetColorByElement(uint8 _uType);
   std::pair<uint8, uint8> GetRandomPendingElements();
   std::pair<CVector2D, CVector2D> GetPendingElementsPosition();
   void DrawCombinedElements();
+  void SaveGame(const std::string& _sPath);
+  void SaveCurrentState();
+  void LoadGame(const std::string& _sPath);
+  void SaveBackup();
 
   SGameState m_oCurrentGameState;
   std::vector<SGameState> m_vctPreviousStates;
@@ -78,4 +87,5 @@ private:
   std::discrete_distribution<uint32> m_oElementRandomDistribution;
   uint32 m_uPlacedElements = 0u;
   EPendingElementsState m_ePendingElementsState = EPendingElementsState::WEST;
+  bool m_bStarted = false;
 };

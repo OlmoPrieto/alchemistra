@@ -4,6 +4,7 @@
 #include "base/types.h"
 #include "base/maths.h"
 #include "game/game.h"
+#include "game/scene.h"
 
 #include <memory>
 #include <string>
@@ -19,10 +20,6 @@ public:
 
   static constexpr uint32 sm_uVirtualWindowWidth = sm_uWindowWidth * sm_uRenderFactor;
   static constexpr uint32 sm_uVirtualWindowHeight = sm_uWindowHeight * sm_uRenderFactor;
-
-  static constexpr uint8  sm_uSaveDataVersion = 0u;
-  static constexpr const char* sm_sBackupsPath = "saves/backups/";
-  static constexpr uint8 sm_uMaxBackups = 4u;
 
   static CGameManager& GetInstance()
   {
@@ -49,17 +46,12 @@ public:
   }
 
   std::shared_ptr<Texture2D> GetTextureByElement(uint8 _uType);
-  void SaveGame(const std::string& _sPath);
-  void SaveCurrentState();
-  void LoadGame(const std::string& _sPath);
 
 private:
   CGameManager();
   ~CGameManager();
 
-  void SaveBackup();
-
-  CGame m_oGame;
+  CScene* m_aoScenes[1] = { nullptr };
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spTriangle;
   std::shared_ptr<Texture2D> m_spSquare;

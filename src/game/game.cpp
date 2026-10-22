@@ -1,5 +1,4 @@
 #include "game/game.h"
-#include "game/game_manager.h"
 
 #include <random>
 #include <chrono>
@@ -8,6 +7,7 @@
 #include <filesystem>
 
 #include "ui/ui.h"
+#include "game/game_manager.h"
 
 // ------------------------
 
@@ -28,7 +28,7 @@ CGame::CGame()
   std::vector<double> vctWeigths(sm_uNumElements);
   for (uint32 i = 0; i < sm_uNumElements; ++i)
   {
-    switch (i % 4)
+    switch (i % 4)  // Number of tiers
     {
       case 0: vctWeigths[i] = 70.0; break; // Basic tier probability
       case 1: vctWeigths[i] = 20.0; break;
@@ -48,6 +48,8 @@ CGame::~CGame()
   {
     UnloadTexture(*m_spBackground.get());
   }
+
+  SaveBackup();
 }
 
 // ------------------------
@@ -225,7 +227,7 @@ void CGame::Draw()
   {
     if (m_uCurrentGameState == UINT32_MAX)
     {
-      CGameManager::GetInstance().SaveCurrentState();
+      SaveCurrentState();
       m_uCurrentGameState = m_vctPreviousStates.size();
     }
 
@@ -271,7 +273,7 @@ void CGame::Draw()
   oSaveButtonConfig.m_v2Size.x = 10.0f;
   if (CButton("SAVE", CVector2D(CGameManager::sm_uWindowWidth * 0.5f - CButton::GetDefaultConfig().m_v2Size.x * 0.25f, 0.0f), oSaveButtonConfig))
   {
-    CGameManager::GetInstance().SaveGame(sLoadFileBuffer.empty() ? "saves/latest.txt" : sLoadFileBuffer);
+    SaveGame(sLoadFileBuffer.empty() ? "saves/latest.txt" : sLoadFileBuffer);
   }
 
   const CVector2D v2InputSize(250.0f, 36.0f);
@@ -292,8 +294,15 @@ void CGame::Draw()
   oLoadButtonConfig.m_iFontSize = 3.0f;
   if (CButton("LOAD", CVector2D(CGameManager::sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, CGameManager::sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadButtonConfig))
   {
-    CGameManager::GetInstance().LoadGame(sLoadFileBuffer);
+    LoadGame(sLoadFileBuffer);
   }
+}
+
+// ------------------------
+
+void CGame::Start()
+{
+  m_bStarted = true;
 }
 
 // ------------------------
@@ -597,6 +606,163 @@ void CGame::DrawCombinedElements()
   DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 7.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.80f, GetFontDefault().baseSize * 2, WHITE);
   sprintf(sScoreBuffer, "x %u", m_auCombinations[11]);
   DrawText(sScoreBuffer, sm_uBackgroundXPos + sm_uElementPixelSize * 7.1f, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 4.05f, GetFontDefault().baseSize * 2, WHITE);
+}
+
+// ------------------------
+
+void CGame::SaveGame(const std::string& _sPath)
+{
+  std::filesystem::path oPath(_sPath);
+  std::ofstream oFile(oPath);
+  if (oFile.is_open() == false)
+  {
+    assert(false);
+    return;
+  }
+
+  oFile << (uint32)sm_uSaveDataVersion << "\n";
+  oFile << (uint32)sm_uMaxVerticalElements << "\n";
+  oFile << (uint32)sm_uMaxHorizontalElements << "\n";
+  oFile << (uint32)m_vctPreviousStates.size() << "\n";
+  for (uint32 i = 0; i < m_vctPreviousStates.size(); ++i)
+  {
+    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElementsState << "\n";
+    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElement0 << "\n";
+    oFile << (uint32)m_vctPreviousStates[i].m_uPendingElement1 << "\n";
+    for (uint32 j = 0; j < CGame::sm_uMaxVerticalElements; ++j)
+    {
+      for (uint32 k = 0; k < CGame::sm_uMaxHorizontalElements; ++k)
+      {
+        oFile << (uint32)m_vctPreviousStates[i].m_auPlacedElements[j][k] << " ";
+      }
+      oFile << "\n";
+    }
+    oFile << "\n";
+  }
+
+  SaveCurrentState();
+  oFile << (uint32)m_oCurrentGameState.m_uPendingElementsState << "\n";
+  oFile << (uint32)m_oCurrentGameState.m_uPendingElement0 << "\n";
+  oFile << (uint32)m_oCurrentGameState.m_uPendingElement1 << "\n";
+  for (uint32 j = 0; j < CGame::sm_uMaxVerticalElements; ++j)
+  {
+    for (uint32 k = 0; k < CGame::sm_uMaxHorizontalElements; ++k)
+    {
+      oFile << (uint32)m_oCurrentGameState.m_auPlacedElements[j][k] << " ";
+    }
+    oFile << "\n";
+  }
+
+  printf("File saved on [%s]\n", _sPath.c_str());
+}
+
+// ------------------------
+
+void CGame::SaveCurrentState()
+{
+  m_oCurrentGameState.m_uPendingElementsState = (uint8)m_ePendingElementsState;
+  m_oCurrentGameState.m_uPendingElement0 = m_oPendingElements.first;
+  m_oCurrentGameState.m_uPendingElement1 = m_oPendingElements.second;
+  memcpy(m_oCurrentGameState.m_auPlacedElements, m_auPlacedElements, sizeof(uint8) * sm_uMaxHorizontalElements * sm_uMaxVerticalElements);
+}
+
+// ------------------------
+
+void CGame::LoadGame(const std::string& _sPath)
+{
+  std::filesystem::path oPath(_sPath);
+  std::ifstream oFile(oPath);
+  if (oFile.is_open() == false)
+  {
+    assert(false);
+    return;
+  }
+
+  uint32 uSaveDataVersion       = UINT32_MAX;
+  uint32 uMaxVerticalElements   = UINT32_MAX;
+  uint32 uMaxHorizontalElements = UINT32_MAX;
+  uint32 uPreviousStatesSize    = UINT32_MAX;
+  oFile >> uSaveDataVersion;        assert(uSaveDataVersion       == sm_uSaveDataVersion);
+  oFile >> uMaxVerticalElements;    assert(uMaxVerticalElements   == sm_uMaxVerticalElements);
+  oFile >> uMaxHorizontalElements;  assert(uMaxHorizontalElements == sm_uMaxHorizontalElements);
+  oFile >> uPreviousStatesSize;
+  m_vctPreviousStates.resize(uPreviousStatesSize);
+  for (uint32 i = 0; i < m_vctPreviousStates.size(); ++i)
+  {
+    uint32 uTmp = UINT32_MAX;
+    oFile >> uTmp;
+    m_vctPreviousStates[i].m_uPendingElementsState = (uint8)uTmp;
+    oFile >> uTmp;
+    m_vctPreviousStates[i].m_uPendingElement0 = (uint8)uTmp;
+    oFile >> uTmp;
+    m_vctPreviousStates[i].m_uPendingElement1 = (uint8)uTmp;
+    for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+    {
+      for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
+      {
+        oFile >> uTmp;
+        m_vctPreviousStates[i].m_auPlacedElements[j][k] = (uint8)uTmp;
+      }
+    }
+  }
+
+  uint32 uTmp = UINT32_MAX;
+  oFile >> uTmp;
+  m_ePendingElementsState = (EPendingElementsState)uTmp;
+  oFile >> uTmp;
+  m_oPendingElements.first = (uint8)uTmp;
+  oFile >> uTmp;
+  m_oPendingElements.second = (uint8)uTmp;
+  for (uint32 j = 0; j < sm_uMaxVerticalElements; ++j)
+  {
+    for (uint32 k = 0; k < sm_uMaxHorizontalElements; ++k)
+    {
+      oFile >> uTmp;
+      m_auPlacedElements[j][k] = (uint8)uTmp;
+    }
+  }
+}
+
+// ------------------------
+
+void CGame::SaveBackup()
+{
+  uint8 uCurrentBackup = 0;
+  char sBuffer[128] = { '\0' };
+  for (; uCurrentBackup < sm_uMaxBackups; ++uCurrentBackup)
+  {
+    sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uCurrentBackup);
+    if (std::filesystem::exists(sBuffer) == false)
+    {
+      break;
+    }
+  }
+
+  if (uCurrentBackup < sm_uMaxBackups)
+  {
+    SaveGame(sBuffer);
+  }
+  else
+  {
+    // Need to overwrite the oldest one
+    std::filesystem::file_time_type oCurrentTime = std::filesystem::file_time_type::clock::now();
+    std::filesystem::file_time_type oOldestTime = oCurrentTime;
+    uCurrentBackup = 0;
+    uint8 uTargetBackup = 0;
+    for (; uCurrentBackup < sm_uMaxBackups; ++uCurrentBackup)
+    {
+      sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uCurrentBackup);
+      std::filesystem::file_time_type oTime = std::filesystem::last_write_time(sBuffer);
+      if (oTime < oOldestTime)
+      {
+        oOldestTime = oTime;
+        uTargetBackup = uCurrentBackup;
+      }
+    }
+
+    sprintf(sBuffer, "%sbackup_%u.txt", sm_sBackupsPath, uTargetBackup);
+    SaveGame(sBuffer);
+  }
 }
 
 // ------------------------
