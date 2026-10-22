@@ -296,6 +296,12 @@ void CGame::Draw()
   {
     LoadGame(sLoadFileBuffer);
   }
+
+  const CVector2D v2QuitButtonSize = CButton::CalculateSize("QUIT");
+  if (CButton("QUIT", CVector2D(CGameManager::sm_uWindowWidth * 0.5f - v2QuitButtonSize.x * 0.5f, CGameManager::sm_uWindowHeight - v2InputSize.y * 2.75)))
+  {
+    End();
+  }
 }
 
 // ------------------------
@@ -303,6 +309,13 @@ void CGame::Draw()
 void CGame::Start()
 {
   m_bStarted = true;
+}
+
+// ------------------------
+
+void CGame::End()
+{
+  m_bStarted = false;
 }
 
 // ------------------------

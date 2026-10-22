@@ -37,6 +37,7 @@ public:
   void Draw();
 
   void Start();
+  void End();
 
   bool CheckAndMerge();
   void ApplyPhysics(); // Tries to make floating elements occupy empty ones
