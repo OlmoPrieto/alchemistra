@@ -51,11 +51,12 @@ private:
   CGameManager();
   ~CGameManager();
 
-  CScene* m_aoScenes[1] = { nullptr };
+  CScene* m_aoScenes[2] = { nullptr };
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spTriangle;
   std::shared_ptr<Texture2D> m_spSquare;
   std::shared_ptr<Texture2D> m_spPentagon;
   std::shared_ptr<Texture2D> m_spCircle;
+  uint8 m_uCurrentScene = 0u;
   bool m_bWantClose = false;
 };

@@ -6,6 +6,7 @@
 
 #include "game/game.h"
 #include "game/game_scene.h"
+#include "game/inventory_scene.h"
 
 // ------------------------
 
@@ -38,6 +39,11 @@ void CGameManager::Init()
 
   m_aoScenes[0] = new CGameScene();
   m_aoScenes[0]->Init("Game");
+
+  m_aoScenes[1] = new CInventoryScene();
+  m_aoScenes[1]->Init("Inventory");
+
+  m_uCurrentScene = 1;
 }
 
 // ------------------------
@@ -49,6 +55,10 @@ void CGameManager::Destroy()
   if (m_aoScenes[0] != nullptr)
   {
     delete m_aoScenes[0];
+  }
+  if (m_aoScenes[1] != nullptr)
+  {
+    delete m_aoScenes[1];
   }
 
   if (m_bWantClose)
@@ -63,7 +73,7 @@ void CGameManager::Loop()
 {
   m_bWantClose = IsKeyPressed(KEY_ESCAPE);
   
-  m_aoScenes[0]->Update(GetFrameTime());
+  m_aoScenes[m_uCurrentScene]->Update(GetFrameTime());
 
   Draw();
 }
@@ -75,7 +85,7 @@ void CGameManager::Draw()
   BeginTextureMode(m_oRenderTarget);
   ClearBackground(BLACK);
   // ----
-  m_aoScenes[0]->Draw();
+  m_aoScenes[m_uCurrentScene]->Draw();
   // ----
   EndTextureMode();
 

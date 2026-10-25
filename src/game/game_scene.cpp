@@ -50,6 +50,41 @@ void CGameScene::Draw()
       m_oGame.Start();
     }
   }
+
+  // UI
+  //if (IsKeyPressed(KEY_P))
+  //{
+  //  Rectangle oBounds;
+  //  oBounds.width   = CGameManager::sm_uWindowWidth   * 0.2f;
+  //  oBounds.height  = CGameManager::sm_uWindowHeight  * 0.7f;
+  //  oBounds.x       = CGameManager::sm_uWindowWidth   * 0.5f - oBounds.width  * 0.5f;
+  //  oBounds.y       = CGameManager::sm_uWindowHeight  * 0.5f - oBounds.height * 0.5f;
+  //  DrawRectangleRounded(oBounds, 0.05f, 8, Color{ 180u, 180u, 180u, 255u });
+
+  //  CVector2D v2ButtonSize = CButton::CalculateSize("RESUME");
+  //  const CVector2D v2ButtonPos{ oBounds.x + oBounds.width * 0.5f,
+  //    oBounds.y + oBounds.height * 0.5f };
+
+  //  if (CButton("RESUME",
+  //                CVector2D{ v2ButtonPos.x - v2ButtonSize.x * 0.5f,
+  //                v2ButtonPos.y - v2ButtonSize.y * 0.5f }
+  //             )
+  //  )
+  //  {
+  //    // Pause end
+  //  
+  //  }
+
+  //  v2ButtonSize = CButton::CalculateSize("QUIT");
+  //  if (CButton("QUIT",
+  //                CVector2D{ v2ButtonPos.x - v2ButtonSize.x * 0.5f,
+  //                (oBounds.y + oBounds.height) - v2ButtonSize.y * 2.0f }
+  //             )
+  //  )
+  //  {
+
+  //  }
+  //}
 }
 
 // ------------------------

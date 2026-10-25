@@ -15,13 +15,15 @@ class CGame
 public:
   static constexpr uint32 sm_uElementPixelSize      = 32u;
   static constexpr uint32 sm_uMaxHorizontalElements = 8u;
-  static constexpr uint32 sm_uMaxVerticalElements   = 6u;
+  static constexpr uint32 sm_uMaxVerticalElements   = 7u;
   static constexpr uint32 sm_uBackgroundWidth       = sm_uElementPixelSize * sm_uMaxHorizontalElements;
   static constexpr uint32 sm_uBackgroundHeight      = sm_uElementPixelSize * sm_uMaxVerticalElements + sm_uElementPixelSize * 5u;
   static constexpr uint32 sm_uBackgroundXPos        = (384u - sm_uBackgroundWidth) / 2;
   static constexpr uint32 sm_uBackgroundYPos        = sm_uElementPixelSize * 3u;
   static constexpr uint32 sm_uPendingElementHeight  = sm_uBackgroundYPos - sm_uElementPixelSize;
-  static constexpr uint8  sm_uNumElements           = 12u;
+  static constexpr uint32 sm_uNumGroupsElements     = 3u;
+  static constexpr uint32 sm_uNumElementsPerTier    = 4u;
+  static constexpr uint8  sm_uNumElements           = sm_uNumGroupsElements * sm_uNumElementsPerTier;
 
   static constexpr uint8  sm_uSaveDataVersion = 0u;
   static constexpr const char* sm_sBackupsPath = "saves/backups/";
