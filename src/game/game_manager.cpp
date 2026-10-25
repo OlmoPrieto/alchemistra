@@ -44,6 +44,19 @@ void CGameManager::Init()
   m_aoScenes[1]->Init("Inventory");
 
   m_uCurrentScene = 1;
+
+  m_auInventory[0]  = 10;
+  m_auInventory[1]  = 5;
+  m_auInventory[2]  = 3;
+  m_auInventory[3]  = 0;
+  m_auInventory[4]  = 8;
+  m_auInventory[5]  = 5;
+  m_auInventory[6]  = 7;
+  m_auInventory[7]  = 1;
+  m_auInventory[8]  = 9;
+  m_auInventory[9]  = 3;
+  m_auInventory[10] = 3;
+  m_auInventory[11] = 1;
 }
 
 // ------------------------
@@ -149,6 +162,51 @@ std::shared_ptr<Texture2D> CGameManager::GetTextureByElement(uint8 _uType)
 
   return nullptr;
 }
+
+// ------------------------
+
+Color CGameManager::GetColorByElement(uint8 _uType)
+{
+  switch (_uType)
+  {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    {
+      return RED;
+    }
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    {
+      return GREEN;
+    }
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    {
+      return BLUE;
+    }
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+    {
+      return YELLOW;
+    }
+    default:
+    {
+
+    }
+  }
+
+  return PURPLE;
+}
+
+// ------------------------
 
 // ------------------------
 // ------------------------

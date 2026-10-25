@@ -69,7 +69,6 @@ private:
     uint8 m_auPlacedElements[sm_uMaxVerticalElements][sm_uMaxHorizontalElements] = { 0 };
   };
 
-  Color GetColorByElement(uint8 _uType);
   std::pair<uint8, uint8> GetRandomPendingElements();
   std::pair<CVector2D, CVector2D> GetPendingElementsPosition();
   void DrawCombinedElements();

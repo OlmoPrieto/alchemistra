@@ -203,7 +203,7 @@ void CGame::Draw()
       {
         std::shared_ptr<Texture2D> spTargetTexture = CGameManager::GetInstance().GetTextureByElement(m_auPlacedElements[i][j]);
         const CVector2D v2ElementPos(sm_uBackgroundXPos + j * sm_uElementPixelSize, (sm_uBackgroundYPos + sm_uBackgroundHeight - sm_uElementPixelSize) - i * sm_uElementPixelSize);
-        DrawTexture(*spTargetTexture.get(), v2ElementPos.x, v2ElementPos.y, GetColorByElement(m_auPlacedElements[i][j]));
+        DrawTexture(*spTargetTexture.get(), v2ElementPos.x, v2ElementPos.y, CGameManager::GetInstance().GetColorByElement(m_auPlacedElements[i][j]));
       }
     }
   }
@@ -214,12 +214,12 @@ void CGame::Draw()
   DrawTexture(*spTargetTexture.get(),
     oPendingElementsPos.first.x,
     oPendingElementsPos.first.y,
-    GetColorByElement(m_oPendingElements.first));
+    CGameManager::GetInstance().GetColorByElement(m_oPendingElements.first));
   spTargetTexture = CGameManager::GetInstance().GetTextureByElement(m_oPendingElements.second);
   DrawTexture(*spTargetTexture.get(),
     oPendingElementsPos.second.x,
     oPendingElementsPos.second.y,
-    GetColorByElement(m_oPendingElements.second));
+    CGameManager::GetInstance().GetColorByElement(m_oPendingElements.second));
 
   // -------- UI -------- 
 
@@ -468,49 +468,6 @@ void CGame::PrintGrid(const uint8 _auGrid[sm_uMaxVerticalElements][sm_uMaxHorizo
 
 // ------------------------
 
-Color CGame::GetColorByElement(uint8 _uType)
-{
-  switch (_uType)
-  {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    {
-      return RED;
-    }
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    {
-      return GREEN;
-    }
-    case 9 :
-    case 10:
-    case 11:
-    case 12:
-    {
-      return BLUE;
-    }
-    case 13:
-    case 14:
-    case 15:
-    case 16:
-    {
-      return YELLOW;
-    }
-    default:
-    {
-
-    }
-  }
-
-  return PURPLE;
-}
-
-// ------------------------
-
 std::pair<uint8, uint8> CGame::GetRandomPendingElements()
 {
   return { m_oElementRandomDistribution(GetRandomEngine()) + 1u, m_oElementRandomDistribution(GetRandomEngine()) + 1u};
@@ -576,20 +533,20 @@ void CGame::DrawCombinedElements()
   std::shared_ptr<Texture2D> spPentagon = CGameManager::GetInstance().GetTextureByElement(2);
   std::shared_ptr<Texture2D> spCircle   = CGameManager::GetInstance().GetTextureByElement(3);
 
-  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(1));
-  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(2));
-  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(3));
-  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(4));
+  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight, CGameManager::GetInstance().GetColorByElement(1));
+  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, CGameManager::GetInstance().GetColorByElement(2));
+  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, CGameManager::GetInstance().GetColorByElement(3));
+  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, CGameManager::GetInstance().GetColorByElement(4));
 
-  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(5));
-  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(6));
-  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(7));
-  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(8));
+  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight, CGameManager::GetInstance().GetColorByElement(5));
+  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, CGameManager::GetInstance().GetColorByElement(6));
+  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, CGameManager::GetInstance().GetColorByElement(7));
+  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 3, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, CGameManager::GetInstance().GetColorByElement(8));
 
-  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight, GetColorByElement(9));
-  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, GetColorByElement(10));
-  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, GetColorByElement(11));
-  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, GetColorByElement(12));
+  DrawTexture(*spTriangle.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight, CGameManager::GetInstance().GetColorByElement(9));
+  DrawTexture(*spSquare  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 1.25f, CGameManager::GetInstance().GetColorByElement(10));
+  DrawTexture(*spPentagon.get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 2.50f, CGameManager::GetInstance().GetColorByElement(11));
+  DrawTexture(*spCircle  .get(), sm_uBackgroundXPos + sm_uElementPixelSize * 6, sm_uBackgroundYPos + sm_uBackgroundHeight + sm_uElementPixelSize * 3.75f, CGameManager::GetInstance().GetColorByElement(12));
 
   char sScoreBuffer[8] = { '\0' };
 

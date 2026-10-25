@@ -46,12 +46,15 @@ public:
   }
 
   std::shared_ptr<Texture2D> GetTextureByElement(uint8 _uType);
+  Color GetColorByElement(uint8 _uType);
+  const uint32* GetInventory() const { return m_auInventory; }
 
 private:
   CGameManager();
   ~CGameManager();
 
   CScene* m_aoScenes[2] = { nullptr };
+  uint32 m_auInventory[CGame::sm_uNumGroupsElements * CGame::sm_uNumElementsPerTier] = { 0u };
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spTriangle;
   std::shared_ptr<Texture2D> m_spSquare;
