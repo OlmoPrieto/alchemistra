@@ -73,12 +73,19 @@ void CInventoryScene::Draw()
       sprintf(sBuffer, "x%u", pInventory[j + i * CGame::sm_uNumElementsPerTier]);
 
       DrawText(sBuffer, 
-        fGridX + j * fCellSize + fPadding + CGame::sm_uElementPixelSize * 1.1f, 
-        fGridY + i * fCellSize + fPadding + CGame::sm_uElementPixelSize * 1.2f, 
+        fGridX + j * fCellSize + fPadding + CGame::sm_uElementPixelSize * 1.1f, // Little offset in each coordinate
+        fGridY + i * fCellSize + fPadding + CGame::sm_uElementPixelSize * 1.2f, // Little offset in each coordinate
         GetFontDefault().baseSize, 
         WHITE);
     }
   }
+}
+
+// ------------------------
+
+bool CInventoryScene::CanBeChanged() const
+{
+  return true;
 }
 
 // ------------------------

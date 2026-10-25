@@ -12,6 +12,7 @@ public:
   void virtual Init(const std::string& _sName);
   void virtual Update(float _fDt) = 0;
   void virtual Draw() = 0;
+  bool virtual CanBeChanged() const = 0;
 
 private:
   std::string m_sName;

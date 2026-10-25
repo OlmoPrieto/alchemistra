@@ -183,10 +183,18 @@ void CButton::Draw(const char* _pText, const CVector2D& _v2Position, const SUIBu
     _oConfig.m_oPressed, _oConfig.m_oDisabled, m_eState);
   DrawFrame(oBounds, oColors, _oConfig.m_fBorderWidth, _oConfig.m_fCornerRadius);
 
-  const int32 iTextWidth = MeasureText(pText, _oConfig.m_iFontSize);
-  const int32 iTextX = (int32)(oBounds.x + (oBounds.width - iTextWidth) * 0.5f);
-  const int32 iTextY = (int32)(oBounds.y + (oBounds.height - _oConfig.m_iFontSize) * 0.5f);
-  DrawText(pText, iTextX, iTextY, _oConfig.m_iFontSize, oColors.m_cText);
+  const Font oFont = GetFontDefault();
+  const float fFontSize = (float)_oConfig.m_iFontSize;
+  const float fSpacing = fFontSize / 10.0f;
+  const Vector2 v2TextSize = MeasureTextEx(oFont, pText, fFontSize, fSpacing);
+  const int32 iTextX = (int32)std::round(oBounds.x + (oBounds.width - v2TextSize.x) * 0.5f);
+  const int32 iTextY = (int32)std::round(oBounds.y + (oBounds.height - v2TextSize.y) * 0.5f);
+  const Vector2 v2TextPosition =
+  {
+    (float)iTextX,
+    (float)iTextY
+  };
+  DrawTextEx(oFont, pText, v2TextPosition, fFontSize, fSpacing, oColors.m_cText);
 }
 
 // ------------------------------------------------------------------------------------------

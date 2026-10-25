@@ -1,5 +1,7 @@
 #include "game/scene.h"
 
+#include "raylib/raylib.h"
+
 // ------------------------
 
 CScene::CScene()
@@ -25,7 +27,7 @@ void CScene::Init(const std::string& _sName)
 
 void CScene::Update(float _fDt)
 {
-
+  
 }
 
 // ------------------------

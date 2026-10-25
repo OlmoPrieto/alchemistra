@@ -43,7 +43,7 @@ void CGameManager::Init()
   m_aoScenes[1] = new CInventoryScene();
   m_aoScenes[1]->Init("Inventory");
 
-  m_uCurrentScene = 1;
+  m_uCurrentScene = 0;
 
   m_auInventory[0]  = 10;
   m_auInventory[1]  = 5;
@@ -86,6 +86,17 @@ void CGameManager::Loop()
 {
   m_bWantClose = IsKeyPressed(KEY_ESCAPE);
   
+  const bool bCanChangeScene = m_aoScenes[m_uCurrentScene]->CanBeChanged();
+
+  if (bCanChangeScene && IsKeyPressed(KEY_RIGHT))
+  {
+    m_uCurrentScene = (m_uCurrentScene + 1) % (uint8)EScenes::COUNT;
+  }
+  if (bCanChangeScene && IsKeyPressed(KEY_LEFT))
+  {
+    m_uCurrentScene = std::abs((int32)m_uCurrentScene - 1) % (uint8)EScenes::COUNT;
+  }
+
   m_aoScenes[m_uCurrentScene]->Update(GetFrameTime());
 
   Draw();

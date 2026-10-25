@@ -21,6 +21,14 @@ public:
   static constexpr uint32 sm_uVirtualWindowWidth = sm_uWindowWidth * sm_uRenderFactor;
   static constexpr uint32 sm_uVirtualWindowHeight = sm_uWindowHeight * sm_uRenderFactor;
 
+  enum class EScenes : uint8
+  {
+    GAME = 0,
+    INVENTORY,
+
+    COUNT,
+  };
+
   static CGameManager& GetInstance()
   {
     static CGameManager oInstance;

@@ -28,6 +28,8 @@ void CGameScene::Init(const std::string& _sName)
 
 void CGameScene::Update(float _fDt)
 {
+  CScene::Update(_fDt);
+
   if (m_oGame.GetGameStarted())
   {
     m_oGame.Update(_fDt);
@@ -85,6 +87,13 @@ void CGameScene::Draw()
 
   //  }
   //}
+}
+
+// ------------------------
+
+bool CGameScene::CanBeChanged() const
+{
+  return m_oGame.GetGameStarted() == false;
 }
 
 // ------------------------

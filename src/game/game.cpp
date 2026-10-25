@@ -291,7 +291,7 @@ void CGame::Draw()
   }
   SUIButtonConfig oLoadButtonConfig = CButton::GetDefaultConfig();
   oLoadButtonConfig.m_v2Size.x = 1.0f;
-  oLoadButtonConfig.m_iFontSize = 3.0f;
+  oLoadButtonConfig.m_iFontSize = 10;
   if (CButton("LOAD", CVector2D(CGameManager::sm_uWindowWidth * 0.5f + v2InputSize.x * 0.53f, CGameManager::sm_uWindowHeight - v2InputSize.y * 3 + v2InputSize.y * 1.5f), oLoadButtonConfig))
   {
     LoadGame(sLoadFileBuffer);
