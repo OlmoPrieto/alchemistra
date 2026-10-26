@@ -25,6 +25,7 @@ public:
   {
     GAME = 0,
     INVENTORY,
+    POTIONS,
 
     COUNT,
   };
@@ -61,7 +62,7 @@ private:
   CGameManager();
   ~CGameManager();
 
-  CScene* m_aoScenes[2] = { nullptr };
+  CScene* m_aoScenes[(uint8)EScenes::COUNT] = {nullptr};
   uint32 m_auInventory[CGame::sm_uNumGroupsElements * CGame::sm_uNumElementsPerTier] = { 0u };
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spTriangle;

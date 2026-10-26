@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "game/game_scene.h"
 #include "game/inventory_scene.h"
+#include "game/potions_scene.h"
 
 // ------------------------
 
@@ -42,6 +43,9 @@ void CGameManager::Init()
 
   m_aoScenes[1] = new CInventoryScene();
   m_aoScenes[1]->Init("Inventory");
+
+  m_aoScenes[2] = new CPotionsScene();
+  m_aoScenes[2]->Init("Potions");
 
   m_uCurrentScene = 0;
 
