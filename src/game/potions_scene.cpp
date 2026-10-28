@@ -103,7 +103,19 @@ void CPotionsScene::Draw()
       v2MousePos.y - CGame::sm_uElementPixelSize * 0.5f,
       CGameManager::GetInstance().GetColorByElement(m_uDraggedElement));
   }
-}
+
+  Rectangle oCauldronRect{fGridX, fGridY + fGridHeight * 1.5f, fGridWidth, fGridHeight * 0.5f };
+
+  /*DrawLine(fGridX, fGridY + fGridHeight * 1.5f, fGridX + fGridWidth, fGridY + fGridHeight * 1.5f, SKYBLUE);
+  DrawLine(fGridX, fGridY + fGridHeight * 1.5f + fGridHeight * 0.5f, fGridX + fGridWidth, fGridY + fGridHeight * 1.5f + fGridHeight * 0.5f, SKYBLUE);
+  DrawLine(fGridX, fGridY + fGridHeight * 1.5f, fGridX, fGridY + fGridHeight * 1.5f + fGridHeight * 0.5f, SKYBLUE);
+  DrawLine(fGridX + fGridWidth, fGridY + fGridHeight * 1.5f, fGridX + fGridWidth, fGridY + fGridHeight * 1.5f + fGridHeight * 0.5f, SKYBLUE);*/
+  
+  DrawLine(oCauldronRect.x,                      oCauldronRect.y,                         oCauldronRect.x + oCauldronRect.width,  oCauldronRect.y,                        SKYBLUE);
+  DrawLine(oCauldronRect.x,                      oCauldronRect.y + oCauldronRect.height,  oCauldronRect.x + oCauldronRect.width,  oCauldronRect.y + oCauldronRect.height, SKYBLUE);
+  DrawLine(oCauldronRect.x,                      oCauldronRect.y,                         oCauldronRect.x,                        oCauldronRect.y + oCauldronRect.height, SKYBLUE);
+  DrawLine(oCauldronRect.x + oCauldronRect.width,oCauldronRect.y,                         oCauldronRect.x + oCauldronRect.width,  oCauldronRect.y + oCauldronRect.height, SKYBLUE);
+}                               
 
 // ------------------------
 

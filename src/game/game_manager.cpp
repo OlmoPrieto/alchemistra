@@ -98,7 +98,7 @@ void CGameManager::Loop()
   }
   if (bCanChangeScene && IsKeyPressed(KEY_LEFT))
   {
-    m_uCurrentScene = std::abs((int32)m_uCurrentScene - 1) % (uint8)EScenes::COUNT;
+    m_uCurrentScene = std::abs((int32)(m_uCurrentScene + (uint8)EScenes::COUNT) - 1) % (uint8)EScenes::COUNT;
   }
 
   m_aoScenes[m_uCurrentScene]->Update(GetFrameTime());
