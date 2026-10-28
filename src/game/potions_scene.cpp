@@ -135,14 +135,22 @@ void CPotionsScene::Draw()
   DrawLine(m_oCauldronRect.x,                         m_oCauldronRect.y,                          m_oCauldronRect.x,                          m_oCauldronRect.y + m_oCauldronRect.height, SKYBLUE);
   DrawLine(m_oCauldronRect.x + m_oCauldronRect.width, m_oCauldronRect.y,                          m_oCauldronRect.x + m_oCauldronRect.width,  m_oCauldronRect.y + m_oCauldronRect.height, SKYBLUE);
 
-  for (uint32 i = 0; i < sm_uMaxIngredients; ++i)
+  const uint32 uNumElementsHorizontal  = m_oCauldronRect.width   / CGame::sm_uElementPixelSize;
+  const uint32 uNumElementsVertical    = m_oCauldronRect.height  / CGame::sm_uElementPixelSize;
+
+  //for (uint32 i = 0; i < sm_uMaxIngredients; ++i)
+  for (uint32 i = 0; i < uNumElementsVertical; ++i)
   {
-    if (m_auIngredients[i] != 0)
+    for (uint32 j = 0; j < uNumElementsHorizontal; ++j)
     {
-      DrawTexture(*CGameManager::GetInstance().GetTextureByElement(m_auIngredients[i]).get(),
-        m_oCauldronRect.x + i * CGame::sm_uElementPixelSize,
-        m_oCauldronRect.y,
-        CGameManager::GetInstance().GetColorByElement(m_auIngredients[i]));
+      const uint32 uIndex = i * uNumElementsHorizontal + j;
+      if (m_auIngredients[uIndex] != 0)
+      {
+        DrawTexture(*CGameManager::GetInstance().GetTextureByElement(m_auIngredients[uIndex]).get(),
+          m_oCauldronRect.x + j * CGame::sm_uElementPixelSize,
+          m_oCauldronRect.y + i * CGame::sm_uElementPixelSize,
+          CGameManager::GetInstance().GetColorByElement(m_auIngredients[uIndex]));
+      }
     }
   }
 }                               
