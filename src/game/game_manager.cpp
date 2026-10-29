@@ -13,7 +13,19 @@
 
 CGameManager::CGameManager()
 {
+  // POTION_0
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_0].push_back(1); // Red    triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_0].push_back(1); // Red    triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_0].push_back(1); // Red    triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_0].push_back(5); // Green  triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_0].push_back(6); // Green  square
 
+  // POTION_1
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_1].push_back(1);   // Red    triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_1].push_back(5);   // Green  triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_1].push_back(9);   // Blue   triangle
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_1].push_back(2);   // Red    square
+  m_vctPotionsRecipes[(uint8)EPotion::POTION_1].push_back(10);  // Blue   square
 }
 
 // ------------------------

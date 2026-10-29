@@ -2,6 +2,7 @@
 
 #include "game/game_manager.h"
 #include "game/game.h"
+#include "ui/ui.h"
 
 // ------------------------
 
@@ -15,6 +16,8 @@ CPotionsScene::CPotionsScene()
   m_fGridY        = (CGameManager::sm_uWindowHeight - m_fGridHeight) * 0.3f;
   m_fPadding      = (m_fCellSize - CGame::sm_uElementPixelSize) * 0.25f;
   m_oCauldronRect = { m_fGridX, m_fGridY + m_fGridHeight * 1.5f, m_fGridWidth, CGame::sm_uElementPixelSize * 3 };
+  const CVector2D v2CraftButtonSize = CButton::CalculateSize("CRAFT");
+  m_v2CraftButtonPos = { CGameManager::sm_uWindowWidth * 0.5f - v2CraftButtonSize.x * 0.5f, m_oCauldronRect.y + m_oCauldronRect.height * 1.2f };
 
   memset(m_auIngredients, 0, sizeof(uint8) * sm_uMaxIngredients);
 }
@@ -153,6 +156,19 @@ void CPotionsScene::Draw()
       }
     }
   }
+
+
+  if (CButton("CRAFT", m_v2CraftButtonPos))
+  {
+    if (CheckIngredientsForPotion())
+    {
+      printf("Crafted potion\n");
+    }
+    else
+    {
+      printf("Wrong ingredients\n");
+    }
+  }
 }                               
 
 // ------------------------
@@ -160,6 +176,109 @@ void CPotionsScene::Draw()
 bool CPotionsScene::CanBeChanged() const
 {
   return true;
+}
+
+// ------------------------
+
+bool CPotionsScene::CheckIngredientsForPotion()
+{
+  const std::vector<uint8>* pPotionsRecipes = CGameManager::GetInstance().GetPotionsRecipes();
+  uint8 auIngredientsCopy[sm_uMaxIngredients];
+
+  for (uint32 i = 0; i < (uint8)CGameManager::EPotion::COUNT; ++i)
+  {
+    uint8 uCurrentMatchingIngredients = 0u;
+    // Check ingredients in each recipe
+#if 0
+    for (uint32 j = 0; j < pPotionsRecipes[i].size(); ++j)
+    {
+      const uint8 uPrevMatching = uCurrentMatchingIngredients;
+      // Reset the ingredients copy
+      memcpy(auIngredientsCopy, m_auIngredients, sizeof(uint8) * sm_uMaxIngredients);
+
+      for (uint32 k = 0; k < m_uCurrentNumIngredients; ++k)
+      {
+        if (auIngredientsCopy[k] != 0 && auIngredientsCopy[k] == pPotionsRecipes[i][j])
+        {
+          ++uCurrentMatchingIngredients;
+          auIngredientsCopy[k] = 0;
+          break;
+        }
+      }
+
+      if (uPrevMatching == uCurrentMatchingIngredients)
+      {
+        // There is a current ingredient that doesn't belong to the current potion, check next
+        break;
+      }
+    }
+#endif
+    // --------------------
+#if 1
+    for (uint32 j = 0; j < m_uCurrentNumIngredients; ++j)
+    {
+      const uint8 uPrevMatching = uCurrentMatchingIngredients;
+      // Reset the ingredients copy
+      memcpy(auIngredientsCopy, m_auIngredients, sizeof(uint8) * sm_uMaxIngredients);
+
+      for (uint32 k = 0; k < pPotionsRecipes[i].size(); ++k)
+      {
+        if (auIngredientsCopy[j] != 0 && auIngredientsCopy[j] == pPotionsRecipes[i][k])
+        {
+          ++uCurrentMatchingIngredients;
+          auIngredientsCopy[j] = 0;
+          break;
+        }
+      }
+
+      if (uPrevMatching == uCurrentMatchingIngredients)
+      {
+        // There is a current ingredient that doesn't belong to the current potion, check next
+        break;
+      }
+    }
+#endif
+
+    // For each recipe
+    if (uCurrentMatchingIngredients == pPotionsRecipes[i].size())
+    {
+      printf("Matching ingredients for potion [%u]\n", i);
+      // Need to check if there are remaining ingredients that doesn't belong to the current potion
+      //  We allow to have more ingredients than necessary but they need to belong to the recipe
+      bool bRecipeMatched = true;
+      for (uint32 j = uCurrentMatchingIngredients; j < m_uCurrentNumIngredients; ++j)
+      {
+        const uint8 uPrevMatching = uCurrentMatchingIngredients;
+        // Reset the ingredients copy
+        memcpy(auIngredientsCopy, m_auIngredients, sizeof(uint8) * sm_uMaxIngredients);
+
+        for (uint32 k = 0; k < pPotionsRecipes[i].size(); ++k)
+        {
+          if (auIngredientsCopy[j] != 0 && auIngredientsCopy[j] == pPotionsRecipes[i][k])
+          {
+            ++uCurrentMatchingIngredients;
+            auIngredientsCopy[j] = 0;
+            break;
+          }
+        }
+
+        if (uPrevMatching == uCurrentMatchingIngredients)
+        {
+          // There is a current ingredient that doesn't belong to the current potion, check next
+          printf("  But unfortunately you put ingredients that didn't belong to the recipe. Failed\n");
+          bRecipeMatched = false;
+          break;
+        }
+      }
+
+      if (bRecipeMatched)
+      {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 // ------------------------

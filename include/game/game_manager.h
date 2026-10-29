@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class CGameManager
 {
@@ -28,6 +29,14 @@ public:
     POTIONS,
 
     COUNT,
+  };
+
+  enum class EPotion : uint8
+  {
+    POTION_0 = 0,
+    POTION_1,
+
+    COUNT
   };
 
   static CGameManager& GetInstance()
@@ -57,12 +66,14 @@ public:
   std::shared_ptr<Texture2D> GetTextureByElement(uint8 _uType);
   Color GetColorByElement(uint8 _uType);
   const uint32* GetInventory() const { return m_auInventory; }
+  const std::vector<uint8>* GetPotionsRecipes() const { return m_vctPotionsRecipes; }
 
 private:
   CGameManager();
   ~CGameManager();
 
   CScene* m_aoScenes[(uint8)EScenes::COUNT] = {nullptr};
+  std::vector<uint8> m_vctPotionsRecipes[(uint8)EPotion::COUNT];
   uint32 m_auInventory[CGame::sm_uNumGroupsElements * CGame::sm_uNumElementsPerTier] = { 0u };
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spTriangle;
