@@ -50,6 +50,8 @@ void CGameManager::Init()
   m_spPentagon  = std::make_shared<Texture2D>(LoadTexture("assets/pentagon.png"));
   m_spCircle    = std::make_shared<Texture2D>(LoadTexture("assets/circle.png"));
 
+  m_spPotion    = std::make_shared<Texture2D>(LoadTexture("assets/potion.png"));
+
   m_aoScenes[0] = new CGameScene();
   m_aoScenes[0]->Init("Game");
 
@@ -234,6 +236,27 @@ Color CGameManager::GetColorByElement(uint8 _uType)
 }
 
 // ------------------------
+
+Color CGameManager::GetPotionColor(uint8 _uType)
+{
+  switch (_uType)
+  {
+    case 0:
+    {
+      return LIGHTGRAY;
+    }
+    case 1:
+    {
+      return GOLD;
+    }
+    default:
+    {
+
+    }
+  }
+
+  return PURPLE;
+}
 
 // ------------------------
 // ------------------------

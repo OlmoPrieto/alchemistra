@@ -18,7 +18,7 @@ public:
   void Update(float _fDt) override;
   void Draw() override;
   bool CanBeChanged() const override;
-  bool CheckIngredientsForPotion();
+  uint8 CheckIngredientsForPotion();
 
 private:
   uint8 m_auIngredients[sm_uMaxIngredients] = { 0u };
@@ -31,6 +31,10 @@ private:
   float m_fGridX                          = 0.0f;
   float m_fGridY                          = 0.0f;
   float m_fPadding                        = 0.0f;
+  float m_fPotionsGridX                   = 0.0f;
+  float m_fPotionsGridY                   = 0.0f;
+  float m_fPotionsGridWidth               = 0.0f;
+  float m_fPotionsGridHeight              = 0.0f;
   uint8 m_uDraggedIngredient              = 0u;
   uint8 m_uDraggedIngredientCauldron      = 0u;
   uint8 m_uDraggedIngredientCauldronIndex = UINT8_MAX;

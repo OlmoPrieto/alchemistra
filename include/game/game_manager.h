@@ -67,6 +67,9 @@ public:
   Color GetColorByElement(uint8 _uType);
   const uint32* GetInventory() const { return m_auInventory; }
   const std::vector<uint8>* GetPotionsRecipes() const { return m_vctPotionsRecipes; }
+  std::pair<EPotion, uint8>* GetPotions() { return m_aoPotions; }
+  std::shared_ptr<Texture2D> GetPotionTexture() const { return m_spPotion; }
+  Color GetPotionColor(uint8 _uType);
 
 private:
   CGameManager();
@@ -74,12 +77,14 @@ private:
 
   CScene* m_aoScenes[(uint8)EScenes::COUNT] = {nullptr};
   std::vector<uint8> m_vctPotionsRecipes[(uint8)EPotion::COUNT];
+  std::pair<EPotion, uint8> m_aoPotions[(uint8)EPotion::COUNT];
   uint32 m_auInventory[CGame::sm_uNumGroupsElements * CGame::sm_uNumElementsPerTier] = { 0u };
   RenderTexture2D m_oRenderTarget;
   std::shared_ptr<Texture2D> m_spTriangle;
   std::shared_ptr<Texture2D> m_spSquare;
   std::shared_ptr<Texture2D> m_spPentagon;
   std::shared_ptr<Texture2D> m_spCircle;
+  std::shared_ptr<Texture2D> m_spPotion;
   uint8 m_uCurrentScene = 0u;
   bool m_bWantClose = false;
 };

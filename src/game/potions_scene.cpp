@@ -15,11 +15,15 @@ CPotionsScene::CPotionsScene()
   m_fGridWidth    = CGame::sm_uNumElementsPerTier * m_fCellSize;
   m_fGridHeight   = CGame::sm_uNumGroupsElements * m_fCellSize;
   m_fGridX        = (CGameManager::sm_uWindowWidth - m_fGridWidth) * 0.5f;
-  m_fGridY        = (CGameManager::sm_uWindowHeight - m_fGridHeight) * 0.3f;
+  m_fGridY        = (CGameManager::sm_uWindowHeight - m_fGridHeight) * 0.2f;
   m_fPadding      = (m_fCellSize - CGame::sm_uElementPixelSize) * 0.25f;
-  m_oCauldronRect = { m_fGridX, m_fGridY + m_fGridHeight * 1.5f, m_fGridWidth, CGame::sm_uElementPixelSize * 3 };
+  m_oCauldronRect = { m_fGridX, m_fGridY + m_fGridHeight * 1.15f, m_fGridWidth, CGame::sm_uElementPixelSize * 3 };
   const CVector2D v2CraftButtonSize = CButton::CalculateSize("CRAFT");
-  m_v2CraftButtonPos = { CGameManager::sm_uWindowWidth * 0.5f - v2CraftButtonSize.x * 0.5f, m_oCauldronRect.y + m_oCauldronRect.height * 1.2f };
+  m_v2CraftButtonPos = { CGameManager::sm_uWindowWidth * 0.5f - v2CraftButtonSize.x * 0.5f, m_oCauldronRect.y + m_oCauldronRect.height * 1.15f };
+  m_fPotionsGridX = m_fGridX;
+  m_fPotionsGridY = m_v2CraftButtonPos.y * 1.125f;
+  m_fPotionsGridWidth = m_fGridWidth;
+  m_fPotionsGridHeight = m_fGridHeight;
 
   memset(m_auIngredients, 0, sizeof(uint8) * sm_uMaxIngredients);
 }
@@ -134,7 +138,7 @@ void CPotionsScene::Draw()
 {
   const CVector2D v2MousePos = CGameManager::GetInstance().GetMousePos();
 
-  DrawText("POTIONS", CGameManager::sm_uWindowWidth * 0.5f - (GetFontDefault().baseSize * strlen("POTIONS")) * 0.5f,
+  DrawText("POTIONS", CGameManager::sm_uWindowWidth * 0.5f - (GetFontDefault().baseSize * strlen("POTIONS")) * 0.65f,
     CGameManager::sm_uWindowHeight * 0.1f, GetFontDefault().baseSize * 2, WHITE);
 
   constexpr float fGridLineThickness = 1.0f;
@@ -151,6 +155,7 @@ void CPotionsScene::Draw()
   }
 
   const uint32* pInventory = CGameManager::GetInstance().GetInventory();
+  std::pair<CGameManager::EPotion, uint8>* pPotions = CGameManager::GetInstance().GetPotions();
   for (uint32 i = 0; i < CGame::sm_uNumGroupsElements; ++i)
   {
     for (uint32 j = 0; j < CGame::sm_uNumElementsPerTier; ++j)
@@ -170,6 +175,24 @@ void CPotionsScene::Draw()
         m_fGridY + i * m_fCellSize + m_fPadding + CGame::sm_uElementPixelSize * 1.2f, // Little offset in each coordinate
         GetFontDefault().baseSize,
         WHITE);
+
+      if (j + i * CGame::sm_uNumElementsPerTier < (uint8)CGameManager::EPotion::COUNT)
+      {
+        const float fPotionX = m_fPotionsGridX + j * m_fCellSize + m_fPadding + 1;
+        const float fPotionY = m_fPotionsGridY + i * m_fCellSize + m_fPadding;
+        DrawTexture(*CGameManager::GetInstance().GetPotionTexture().get(),
+          fPotionX,
+          fPotionY,
+          CGameManager::GetInstance().GetPotionColor(j + i * CGame::sm_uNumElementsPerTier));
+
+        sprintf(sBuffer, "x%u", pPotions[j + i * CGame::sm_uNumElementsPerTier].second);
+
+        DrawText(sBuffer,
+          m_fPotionsGridX + j * m_fCellSize + m_fPadding + CGame::sm_uElementPixelSize * 1.1f, // Little offset in each coordinate
+          m_fPotionsGridY + i * m_fCellSize + m_fPadding + CGame::sm_uElementPixelSize * 1.2f, // Little offset in each coordinate
+          GetFontDefault().baseSize,
+          WHITE);
+      }
     }
   }
 
@@ -210,14 +233,33 @@ void CPotionsScene::Draw()
 
   if (CButton("CRAFT", m_v2CraftButtonPos))
   {
-    if (CheckIngredientsForPotion())
+    uint8 uPotion = CheckIngredientsForPotion();
+    if (uPotion != UINT8_MAX)
     {
       printf("Crafted potion\n");
+      pPotions[uPotion].second++;
     }
     else
     {
       printf("Wrong ingredients\n");
     }
+
+    memset(m_auIngredients, 0, sizeof(uint8) * sm_uMaxIngredients);
+    m_uCurrentNumIngredients = 0u;
+  }
+
+
+  // Potions inventory
+  for (uint32 uColumn = 0; uColumn <= CGame::sm_uNumElementsPerTier; ++uColumn)
+  {
+    const float fX = m_fPotionsGridX + uColumn * m_fCellSize;
+    DrawRectangleRec({ fX - fGridLineThickness * 0.5f, m_fPotionsGridY, fGridLineThickness, m_fPotionsGridHeight }, WHITE);
+  }
+
+  for (uint32 uRow = 0; uRow <= CGame::sm_uNumGroupsElements; ++uRow)
+  {
+    const float fY = m_fPotionsGridY + uRow * m_fCellSize;
+    DrawRectangleRec({ m_fPotionsGridX, fY - fGridLineThickness * 0.5f, m_fPotionsGridWidth, fGridLineThickness }, WHITE);
   }
 }                               
 
@@ -230,7 +272,7 @@ bool CPotionsScene::CanBeChanged() const
 
 // ------------------------
 
-bool CPotionsScene::CheckIngredientsForPotion()
+uint8 CPotionsScene::CheckIngredientsForPotion()
 {
   const std::vector<uint8>* pPotionsRecipes = CGameManager::GetInstance().GetPotionsRecipes();
   uint8 auIngredientsCopy[sm_uMaxIngredients];
@@ -323,12 +365,12 @@ bool CPotionsScene::CheckIngredientsForPotion()
 
       if (bRecipeMatched)
       {
-        return true;
+        return i;
       }
     }
   }
 
-  return false;
+  return UINT8_MAX;
 }
 
 // ------------------------
