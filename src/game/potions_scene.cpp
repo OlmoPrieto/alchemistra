@@ -1,5 +1,7 @@
 #include "game/potions_scene.h"
 
+#include <cassert>
+
 #include "game/game_manager.h"
 #include "game/game.h"
 #include "ui/ui.h"
@@ -45,14 +47,37 @@ void CPotionsScene::Update(float _fDt)
 
   if (m_bIsDragging && bIsLeftMouseButtonDown == false)
   {
+    // Drop ingredient into the cauldron
     if (v2MousePos.x >= m_oCauldronRect.x && v2MousePos.x <= m_oCauldronRect.x + m_oCauldronRect.width &&
       v2MousePos.y >= m_oCauldronRect.y && v2MousePos.y <= m_oCauldronRect.y + m_oCauldronRect.height)
     {
-      m_auIngredients[m_uCurrentNumIngredients++] = m_uDraggedElement;
+      if (m_uDraggedIngredient != 0u)
+      {
+        for (uint32 i = 0; i <= m_uCurrentNumIngredients; ++i)
+        {
+          if (m_auIngredients[i] == 0)
+          {
+            m_auIngredients[i] = m_uDraggedIngredient;
+            ++m_uCurrentNumIngredients;
+            break;
+          }
+        }
+      }
+    }
+    else
+    {
+      if (m_uDraggedIngredientCauldron != 0u)
+      {
+        assert(m_uDraggedIngredientCauldronIndex != UINT8_MAX);
+        m_auIngredients[m_uDraggedIngredientCauldronIndex] = 0u;
+        m_uDraggedIngredientCauldronIndex = UINT8_MAX;
+        m_uDraggedIngredientCauldron = 0u;
+        --m_uCurrentNumIngredients;
+      }
     }
 
     m_bIsDragging = false;
-    m_uDraggedElement = 0;
+    m_uDraggedIngredient = 0;
     
     return;
   }
@@ -65,15 +90,39 @@ void CPotionsScene::Update(float _fDt)
   {
     for (uint32 j = 0; j < CGame::sm_uNumElementsPerTier; ++j)
     {
-      const float fElementX = m_fGridX + j * m_fCellSize + m_fPadding + 1;
-      const float fElementY = m_fGridY + i * m_fCellSize + m_fPadding;
+      const float fInventoryElementX = m_fGridX + j * m_fCellSize + m_fPadding + 1;
+      const float fInventoryElementY = m_fGridY + i * m_fCellSize + m_fPadding;
       if (m_bIsDragging == false && bIsLeftMouseButtonDown &&
-        v2MousePos.x >= fElementX && v2MousePos.x <= fElementX + CGame::sm_uElementPixelSize &&
-        v2MousePos.y >= fElementY && v2MousePos.y <= fElementY + CGame::sm_uElementPixelSize)
+        v2MousePos.x >= fInventoryElementX && v2MousePos.x <= fInventoryElementX + CGame::sm_uElementPixelSize &&
+        v2MousePos.y >= fInventoryElementY && v2MousePos.y <= fInventoryElementY + CGame::sm_uElementPixelSize)
       {
         m_bIsDragging = true;
-        m_uDraggedElement = j + i * CGame::sm_uNumElementsPerTier + 1;
+        m_uDraggedIngredient = j + i * CGame::sm_uNumElementsPerTier + 1;
         return;
+      }
+    }
+  }
+
+  const uint32 uNumElementsHorizontal = m_oCauldronRect.width   / CGame::sm_uElementPixelSize;
+  const uint32 uNumElementsVertical   = m_oCauldronRect.height  / CGame::sm_uElementPixelSize;
+
+  for (uint32 i = 0; i < uNumElementsVertical; ++i)
+  {
+    for (uint32 j = 0; j < uNumElementsHorizontal; ++j)
+    {
+      const float fCauldronElementX = m_oCauldronRect.x + j * CGame::sm_uElementPixelSize;
+      const float fCauldronElementY = m_oCauldronRect.y + i * CGame::sm_uElementPixelSize;
+      const uint32 uIndex = i * uNumElementsHorizontal + j;
+      if (m_bIsDragging == false && bIsLeftMouseButtonDown &&
+        v2MousePos.x >= fCauldronElementX && v2MousePos.x <= fCauldronElementX + CGame::sm_uElementPixelSize &&
+        v2MousePos.y >= fCauldronElementY && v2MousePos.y <= fCauldronElementY + CGame::sm_uElementPixelSize)
+      {
+        if (m_auIngredients[j + i * uNumElementsHorizontal] != 0)
+        {
+          m_bIsDragging = true;
+          m_uDraggedIngredientCauldron = m_auIngredients[j + i * uNumElementsHorizontal];
+          m_uDraggedIngredientCauldronIndex = j + i * uNumElementsHorizontal;
+        }
       }
     }
   }
@@ -124,12 +173,13 @@ void CPotionsScene::Draw()
     }
   }
 
-  if (m_bIsDragging && m_uDraggedElement > 0)
+  if (m_bIsDragging)
   {
-    DrawTexture(*CGameManager::GetInstance().GetTextureByElement(m_uDraggedElement).get(), 
+    uint8 uIngredient = m_uDraggedIngredient != 0u ? m_uDraggedIngredient : (m_uDraggedIngredientCauldron != 0u ? m_uDraggedIngredientCauldron : 0u);
+    DrawTexture(*CGameManager::GetInstance().GetTextureByElement(uIngredient).get(),
       v2MousePos.x - CGame::sm_uElementPixelSize * 0.5f,
       v2MousePos.y - CGame::sm_uElementPixelSize * 0.5f,
-      CGameManager::GetInstance().GetColorByElement(m_uDraggedElement));
+      CGameManager::GetInstance().GetColorByElement(uIngredient));
   }
 
   // Cauldron
