@@ -160,6 +160,7 @@ void CPotionsScene::Draw()
   {
     for (uint32 j = 0; j < CGame::sm_uNumElementsPerTier; ++j)
     {
+      // Inventory
       const float fElementX = m_fGridX + j * m_fCellSize + m_fPadding + 1;
       const float fElementY = m_fGridY + i * m_fCellSize + m_fPadding;
       DrawTexture(*CGameManager::GetInstance().GetTextureByElement(j + i * CGame::sm_uNumElementsPerTier + 1).get(),
@@ -176,6 +177,7 @@ void CPotionsScene::Draw()
         GetFontDefault().baseSize,
         WHITE);
 
+      // Potions
       if (j + i * CGame::sm_uNumElementsPerTier < (uint8)CGameManager::EPotion::COUNT)
       {
         const float fPotionX = m_fPotionsGridX + j * m_fCellSize + m_fPadding + 1;

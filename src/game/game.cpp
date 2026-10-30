@@ -221,6 +221,51 @@ void CGame::Draw()
     oPendingElementsPos.second.y,
     CGameManager::GetInstance().GetColorByElement(m_oPendingElements.second));
 
+  // Potions
+  const std::pair<CGameManager::EPotion, uint8>* pPotions = CGameManager::GetInstance().GetPotions();
+
+  constexpr float fGridCellSizeScale = 2.0f;
+  constexpr float fGridLineThickness = 1.0f;
+  const float fCellSize = CGame::sm_uElementPixelSize * fGridCellSizeScale;
+  const float fPadding = (fCellSize - CGame::sm_uElementPixelSize) * 0.25f;
+  const float fGridWidth = CGame::sm_uNumElementsPerTier * fCellSize;
+  const float fGridHeight = 1 * fCellSize;
+  const float fPotionsGridX = (CGameManager::sm_uWindowWidth - fGridWidth) * 0.5f;
+  const float fPotionsGridY = sm_uBackgroundYPos + sm_uBackgroundHeight * 1.05f;
+  const float fPotionsGridWidth = fGridWidth;
+  const float fPotionsGridHeight = fGridHeight;
+
+  for (uint32 uColumn = 0; uColumn <= CGame::sm_uNumElementsPerTier; ++uColumn)
+  {
+    const float fX = fPotionsGridX + uColumn * fCellSize;
+    DrawRectangleRec({ fX - fGridLineThickness * 0.5f, fPotionsGridY, fGridLineThickness, fPotionsGridHeight }, WHITE);
+  }
+
+  for (uint32 uRow = 0; uRow <= 1; ++uRow)
+  {
+    const float fY = fPotionsGridY + uRow * fCellSize;
+    DrawRectangleRec({ fPotionsGridX, fY - fGridLineThickness * 0.5f, fPotionsGridWidth, fGridLineThickness }, WHITE);
+  }
+
+  char sBuffer[8] = { '\0' };
+  for (uint32 i = 0; i < CGame::sm_uNumElementsPerTier; ++i)
+  {
+    const float fPotionX = fPotionsGridX + i * fCellSize + fPadding + 1;
+    const float fPotionY = fPotionsGridY + fPadding;
+    DrawTexture(*CGameManager::GetInstance().GetPotionTexture().get(),
+      fPotionX,
+      fPotionY,
+      CGameManager::GetInstance().GetPotionColor(i));
+
+    sprintf(sBuffer, "x%u", pPotions[i].second);
+
+    DrawText(sBuffer,
+      fPotionsGridX + i * fCellSize + fPadding + CGame::sm_uElementPixelSize * 1.1f, // Little offset in each coordinate
+      fPotionsGridY + fPadding + CGame::sm_uElementPixelSize * 1.2f, // Little offset in each coordinate
+      GetFontDefault().baseSize,
+      WHITE);
+  }
+
   // -------- UI -------- 
 
   if (CButton("Prev.", CVector2D()))
